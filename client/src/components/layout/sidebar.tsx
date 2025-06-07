@@ -8,7 +8,7 @@ import {
   BarChart, 
   Mail 
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserMenu from "./user-menu";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
@@ -54,16 +54,7 @@ export default function Sidebar() {
 
       {/* User Profile */}
       <div className="p-4 border-t border-gray-200 dark:border-border">
-        <div className="flex items-center space-x-3">
-          <Avatar className="w-10 h-10">
-            <AvatarImage src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100" />
-            <AvatarFallback>JS</AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-foreground">John Smith</p>
-            <p className="text-xs text-gray-500 dark:text-muted-foreground">Sales Manager</p>
-          </div>
-        </div>
+        <UserMenu />
       </div>
     </div>
   );
