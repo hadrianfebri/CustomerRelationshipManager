@@ -11,7 +11,10 @@ import {
   BarChart3, 
   Zap,
   CheckCircle,
-  ArrowRight 
+  ArrowRight,
+  Building2,
+  Crown,
+  Star
 } from "lucide-react";
 
 export default function Landing() {
@@ -193,6 +196,194 @@ export default function Landing() {
                   <h3 className="font-semibold mb-2">Automated Workflows</h3>
                   <p className="text-blue-100">Streamline processes with intelligent automation</p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="bg-gray-50 py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Choose Your Plan
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Start free, upgrade as you grow. All plans include AI automation.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Free Plan */}
+            <Card className="border-2 border-gray-200 relative">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Starter</CardTitle>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold">$0</span>
+                  <span className="text-gray-600">/month</span>
+                </div>
+                <CardDescription>Perfect for small teams getting started</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>Up to 100 contacts</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>3 team members</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>Basic AI lead scoring</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>Email templates</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>Basic analytics</span>
+                  </li>
+                </ul>
+                <Button 
+                  onClick={handleLogin} 
+                  className="w-full mt-6"
+                  variant="outline"
+                >
+                  Get Started Free
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Pro Plan */}
+            <Card className="border-2 border-blue-500 relative shadow-lg">
+              <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-500">
+                Most Popular
+              </Badge>
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Professional</CardTitle>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold">$49</span>
+                  <span className="text-gray-600">/month</span>
+                </div>
+                <CardDescription>Best for growing sales teams</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>Up to 5,000 contacts</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>10 team members</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>Advanced AI automation</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>Custom email sequences</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>Advanced analytics</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>API access</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>Priority support</span>
+                  </li>
+                </ul>
+                <Button 
+                  onClick={handleLogin} 
+                  className="w-full mt-6 bg-blue-600 hover:bg-blue-700"
+                >
+                  Start Free Trial
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Enterprise Plan */}
+            <Card className="border-2 border-purple-500 relative">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <div className="flex items-center gap-1 bg-purple-500 text-white px-3 py-1 rounded-full text-sm">
+                  <Crown className="w-4 h-4" />
+                  Enterprise
+                </div>
+              </div>
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Enterprise</CardTitle>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold">$199</span>
+                  <span className="text-gray-600">/month</span>
+                </div>
+                <CardDescription>For large organizations with custom needs</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>Unlimited contacts</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>Unlimited team members</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>Custom AI workflows</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>White-label options</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>Custom integrations</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>Dedicated support</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span>SLA guarantee</span>
+                  </li>
+                </ul>
+                <Button 
+                  onClick={handleLogin} 
+                  className="w-full mt-6 bg-purple-600 hover:bg-purple-700"
+                >
+                  Contact Sales
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center mt-12">
+            <p className="text-gray-600 mb-4">
+              All plans include 14-day free trial • No credit card required • Cancel anytime
+            </p>
+            <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span>99.9% uptime SLA</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span>GDPR compliant</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span>SOC 2 certified</span>
               </div>
             </div>
           </div>
