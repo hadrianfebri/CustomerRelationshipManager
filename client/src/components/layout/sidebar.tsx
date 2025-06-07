@@ -43,10 +43,10 @@ export default function Sidebar() {
           
           return (
             <Link key={item.name} href={item.href}>
-              <a className={`nav-link ${isActive ? 'nav-link-active' : 'nav-link-inactive'}`}>
+              <div className={`nav-link ${isActive ? 'nav-link-active' : 'nav-link-inactive'}`}>
                 <Icon className="w-5 h-5" />
                 <span className="font-medium">{item.name}</span>
-              </a>
+              </div>
             </Link>
           );
         })}

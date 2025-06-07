@@ -70,7 +70,165 @@ export class MemStorage implements IStorage {
   }
 
   private initializeData() {
-    // Initialize with some basic email templates
+    // Initialize with some sample data for demonstration
+    const sampleContacts: Omit<Contact, "id">[] = [
+      {
+        firstName: "Sarah",
+        lastName: "Johnson",
+        email: "sarah.johnson@techstart.com",
+        phone: "+1 (555) 123-4567",
+        company: "TechStart Solutions",
+        position: "CEO",
+        leadScore: 85,
+        leadStatus: "hot",
+        source: "Website",
+        notes: "Interested in enterprise package",
+        tags: ["enterprise", "decision-maker"],
+        lastContactDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      },
+      {
+        firstName: "Michael",
+        lastName: "Chen",
+        email: "m.chen@digitalinnovations.com",
+        phone: "+1 (555) 987-6543",
+        company: "Digital Innovations Inc",
+        position: "CTO",
+        leadScore: 70,
+        leadStatus: "warm",
+        source: "Referral",
+        notes: "Looking for integration solutions",
+        tags: ["technical", "integration"],
+        lastContactDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      },
+      {
+        firstName: "Emma",
+        lastName: "Rodriguez",
+        email: "emma.r@globalenterprise.com",
+        phone: "+1 (555) 456-7890",
+        company: "Global Enterprise Corp",
+        position: "VP Sales",
+        leadScore: 45,
+        leadStatus: "cold",
+        source: "Cold Call",
+        notes: "Budget constraints, follow up Q2",
+        tags: ["budget-sensitive"],
+        lastContactDate: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+      }
+    ];
+
+    // Initialize contacts
+    sampleContacts.forEach(contact => {
+      const id = this.currentId++;
+      this.contacts.set(id, { ...contact, id });
+    });
+
+    // Initialize activities
+    const sampleActivities: Omit<Activity, "id">[] = [
+      {
+        contactId: 1,
+        type: "call",
+        title: "Discovery call",
+        description: "Initial needs assessment and product demo",
+        date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      },
+      {
+        contactId: 1,
+        type: "email",
+        title: "Proposal sent",
+        description: "Sent enterprise package proposal with pricing",
+        date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      },
+      {
+        contactId: 2,
+        type: "meeting",
+        title: "Technical requirements review",
+        description: "Discussed integration capabilities and API access",
+        date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      }
+    ];
+
+    sampleActivities.forEach(activity => {
+      const id = this.currentId++;
+      this.activities.set(id, { ...activity, id });
+    });
+
+    // Initialize tasks
+    const sampleTasks: Omit<Task, "id">[] = [
+      {
+        contactId: 1,
+        title: "Follow up on proposal",
+        description: "Check if Sarah has reviewed the enterprise proposal",
+        dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+        priority: "high",
+        status: "pending",
+        assignedTo: "John Smith",
+        createdAt: new Date(),
+      },
+      {
+        contactId: 2,
+        title: "Prepare technical demo",
+        description: "Set up API integration demo for Michael",
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        priority: "medium",
+        status: "pending",
+        assignedTo: "John Smith",
+        createdAt: new Date(),
+      },
+      {
+        contactId: null,
+        title: "Update CRM documentation",
+        description: "Add new features to user documentation",
+        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        priority: "low",
+        status: "pending",
+        assignedTo: "John Smith",
+        createdAt: new Date(),
+      }
+    ];
+
+    sampleTasks.forEach(task => {
+      const id = this.currentId++;
+      this.tasks.set(id, { ...task, id });
+    });
+
+    // Initialize deals
+    const sampleDeals: Omit<Deal, "id">[] = [
+      {
+        contactId: 1,
+        title: "TechStart Enterprise Package",
+        value: "75000.00",
+        stage: "proposal",
+        probability: 75,
+        expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        actualCloseDate: null,
+        notes: "High priority prospect, good budget fit",
+        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      },
+      {
+        contactId: 2,
+        title: "Digital Innovations Integration",
+        value: "45000.00",
+        stage: "qualified",
+        probability: 60,
+        expectedCloseDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000),
+        actualCloseDate: null,
+        notes: "Technical evaluation in progress",
+        createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+      }
+    ];
+
+    sampleDeals.forEach(deal => {
+      const id = this.currentId++;
+      this.deals.set(id, { ...deal, id });
+    });
+
+    // Initialize email templates
     const templates: Omit<EmailTemplate, "id">[] = [
       {
         name: "Welcome Email",
@@ -85,6 +243,14 @@ export class MemStorage implements IStorage {
         subject: "Following up on our conversation",
         body: "Hi {{firstName}},\n\nI wanted to follow up on our recent conversation about {{topic}}.\n\nLet me know if you have any questions.\n\nBest regards,\n{{senderName}}",
         category: "follow-up",
+        isActive: true,
+        createdAt: new Date(),
+      },
+      {
+        name: "Proposal Template",
+        subject: "Your {{company}} Proposal - {{proposalTitle}}",
+        body: "Dear {{firstName}},\n\nThank you for your interest in our services. Please find attached your customized proposal for {{company}}.\n\nProposal Details:\n- Solution: {{solutionName}}\n- Investment: {{proposalAmount}}\n- Timeline: {{timeline}}\n\nI'm available to discuss any questions you may have.\n\nBest regards,\n{{senderName}}\n{{senderTitle}}",
+        category: "proposal",
         isActive: true,
         createdAt: new Date(),
       }
@@ -130,7 +296,14 @@ export class MemStorage implements IStorage {
       id, 
       createdAt: new Date(),
       leadScore: insertContact.leadScore || 0,
-      leadStatus: insertContact.leadStatus || "new"
+      leadStatus: insertContact.leadStatus || "new",
+      source: insertContact.source || null,
+      phone: insertContact.phone || null,
+      company: insertContact.company || null,
+      position: insertContact.position || null,
+      notes: insertContact.notes || null,
+      tags: insertContact.tags || [],
+      lastContactDate: insertContact.lastContactDate || null
     };
     this.contacts.set(id, contact);
     return contact;
@@ -178,7 +351,9 @@ export class MemStorage implements IStorage {
       ...insertActivity, 
       id, 
       date: insertActivity.date || new Date(),
-      createdAt: new Date()
+      createdAt: new Date(),
+      contactId: insertActivity.contactId || null,
+      description: insertActivity.description || null
     };
     this.activities.set(id, activity);
     return activity;
@@ -204,7 +379,11 @@ export class MemStorage implements IStorage {
       id, 
       createdAt: new Date(),
       status: insertTask.status || "pending",
-      priority: insertTask.priority || "medium"
+      priority: insertTask.priority || "medium",
+      contactId: insertTask.contactId || null,
+      description: insertTask.description || null,
+      dueDate: insertTask.dueDate || null,
+      assignedTo: insertTask.assignedTo || null
     };
     this.tasks.set(id, task);
     return task;
@@ -243,7 +422,12 @@ export class MemStorage implements IStorage {
       id, 
       createdAt: new Date(),
       stage: insertDeal.stage || "prospecting",
-      probability: insertDeal.probability || 50
+      probability: insertDeal.probability || 50,
+      value: insertDeal.value || null,
+      notes: insertDeal.notes || null,
+      contactId: insertDeal.contactId || null,
+      expectedCloseDate: insertDeal.expectedCloseDate || null,
+      actualCloseDate: insertDeal.actualCloseDate || null
     };
     this.deals.set(id, deal);
     return deal;
@@ -279,7 +463,8 @@ export class MemStorage implements IStorage {
       ...insertTemplate, 
       id, 
       createdAt: new Date(),
-      isActive: insertTemplate.isActive !== false
+      isActive: insertTemplate.isActive !== false,
+      category: insertTemplate.category || null
     };
     this.emailTemplates.set(id, template);
     return template;
