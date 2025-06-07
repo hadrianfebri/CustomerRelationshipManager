@@ -508,7 +508,7 @@ export class DatabaseStorage implements IStorage {
 
   // Contacts
   async getAllContacts(): Promise<Contact[]> {
-    return await db.select().from(contacts).orderBy(contacts.createdAt);
+    return await db.select().from(contacts).orderBy(contacts.id);
   }
 
   async getContact(id: number): Promise<Contact | undefined> {
@@ -538,7 +538,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteContact(id: number): Promise<boolean> {
     const result = await db.delete(contacts).where(eq(contacts.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async searchContacts(query: string): Promise<Contact[]> {
@@ -614,7 +614,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTask(id: number): Promise<boolean> {
     const result = await db.delete(tasks).where(eq(tasks.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Deals
@@ -652,7 +652,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDeal(id: number): Promise<boolean> {
     const result = await db.delete(deals).where(eq(deals.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Email Templates
