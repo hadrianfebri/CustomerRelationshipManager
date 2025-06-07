@@ -130,11 +130,11 @@ export default function AutomationPage() {
     );
   }
 
-  const sequences: CampaignSequence[] = campaigns || [];
+  const sequences: CampaignSequence[] = Array.isArray(campaigns) ? campaigns : [];
   const churnAnalysis: ChurnAnalysis = churnData?.churnAnalysis || {
     totalContacts: 0,
     atRiskContacts: 0,
-    churnRiskPercentage: "0",
+    churnRiskPercentage: "0%",
     churnRisks: [],
     winBackOpportunities: []
   };
@@ -142,9 +142,9 @@ export default function AutomationPage() {
     npsScore: 0,
     totalResponses: 0,
     breakdown: {
-      promoters: { count: 0, percentage: "0" },
-      passives: { count: 0, percentage: "0" },
-      detractors: { count: 0, percentage: "0" }
+      promoters: { count: 0, percentage: "0%" },
+      passives: { count: 0, percentage: "0%" },
+      detractors: { count: 0, percentage: "0%" }
     },
     insights: []
   };
