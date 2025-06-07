@@ -488,8 +488,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       Object.entries(defaultVariables).forEach(([key, value]) => {
         const placeholder = `{{${key}}}`;
-        subject = subject.replace(new RegExp(placeholder, 'g'), value);
-        body = body.replace(new RegExp(placeholder, 'g'), value);
+        const stringValue = value ? String(value) : '';
+        subject = subject.replace(new RegExp(placeholder, 'g'), stringValue);
+        body = body.replace(new RegExp(placeholder, 'g'), stringValue);
       });
       
       // Log activity

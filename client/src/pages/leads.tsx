@@ -1,20 +1,388 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TopBar from "@/components/layout/topbar";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MoreHorizontal, Mail, Phone, Edit, TrendingUp, Zap, Filter } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Contact } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Leads() {
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [scoreFilter, setScoreFilter] = useState("all");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: leads, isLoading } = useQuery({
+    queryKey: ["/api/leads", { status: statusFilter !== "all" ? statusFilter : undefined, score: scoreFilter !== "all" ? scoreFilter : undefined }],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (statusFilter !== "all") params.append("status", statusFilter);
+      if (scoreFilter !== "all") params.append("score", scoreFilter);
+      
+      const response = await fetch(`/api/leads?${params.toString()}`, { credentials: "include" });
+      if (!response.ok) throw new Error("Failed to fetch leads");
+      return response.json();
+    },
+  });
+
+  const { data: analytics } = useQuery({
+    queryKey: ["/api/analytics/conversion-funnel"],
+  }) as { data?: { funnel: any; conversionRates: any } };
+
+  const leadScoringMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/workflows/lead-scoring");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({
+        title: "Lead scoring completed",
+        description: data.message,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to run lead scoring",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateLeadScoreMutation = useMutation({
+    mutationFn: async ({ id, leadScore, leadStatus }: { id: number; leadScore?: number; leadStatus?: string }) => {
+      const response = await apiRequest("PATCH", `/api/contacts/${id}/score`, { leadScore, leadStatus });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({
+        title: "Lead updated",
+        description: "Lead score and status updated successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update lead",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const getLeadStatusBadge = (status: string, score: number) => {
+    if (score >= 80) {
+      return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Hot</Badge>;
+    } else if (score >= 50) {
+      return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">Warm</Badge>;
+    } else if (score >= 20) {
+      return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">Cold</Badge>;
+    } else {
+      return <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400">New</Badge>;
+    }
+  };
+
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
+
+  const formatDate = (date: Date | string | null) => {
+    if (!date) return "Never";
+    return new Date(date).toLocaleDateString();
+  };
+
   return (
     <div className="flex-1 flex flex-col">
       <TopBar 
-        title="Leads" 
-        subtitle="Track and manage your sales leads and prospects"
+        title="Lead Management" 
+        subtitle="Track, score, and manage your sales leads and prospects"
       />
       
       <main className="flex-1 overflow-auto p-6 bg-gray-50 dark:bg-background">
-        <div className="bg-white dark:bg-card rounded-xl shadow-sm border border-gray-200 dark:border-border p-8 text-center">
-          <div className="text-gray-500 dark:text-muted-foreground">
-            <h3 className="text-lg font-medium mb-2">Leads Management</h3>
-            <p>Lead tracking and management features coming soon.</p>
-          </div>
-        </div>
+        <Tabs defaultValue="leads" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="leads">Lead List</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="scoring">Lead Scoring</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="leads" className="space-y-6">
+            {/* Filters */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Filter className="h-5 w-5 mr-2" />
+                  Filters
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex space-x-4">
+                  <div>
+                    <label className="text-sm font-medium">Status</label>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="hot">Hot</SelectItem>
+                        <SelectItem value="warm">Warm</SelectItem>
+                        <SelectItem value="cold">Cold</SelectItem>
+                        <SelectItem value="new">New</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Minimum Score</label>
+                    <Select value={scoreFilter} onValueChange={setScoreFilter}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Scores</SelectItem>
+                        <SelectItem value="80">80+ (Hot)</SelectItem>
+                        <SelectItem value="50">50+ (Warm+)</SelectItem>
+                        <SelectItem value="20">20+ (Cold+)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Leads Table */}
+            <div className="bg-white dark:bg-card rounded-xl shadow-sm border border-gray-200 dark:border-border">
+              {isLoading ? (
+                <div className="p-6">
+                  <div className="animate-pulse space-y-4">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    ))}
+                  </div>
+                </div>
+              ) : !leads || leads.length === 0 ? (
+                <div className="p-8 text-center">
+                  <div className="text-gray-500 dark:text-muted-foreground">
+                    <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-lg font-medium mb-2">No leads found</h3>
+                    <p>No leads match your current filters.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Lead</TableHead>
+                        <TableHead>Company</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Score</TableHead>
+                        <TableHead>Source</TableHead>
+                        <TableHead>Last Contact</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {leads.map((lead: Contact) => (
+                        <TableRow key={lead.id}>
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              <Avatar className="w-10 h-10">
+                                <AvatarFallback>
+                                  {getInitials(lead.firstName, lead.lastName)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="font-medium text-gray-900 dark:text-foreground">
+                                  {lead.firstName} {lead.lastName}
+                                </div>
+                                <div className="text-sm text-gray-500 dark:text-muted-foreground">
+                                  {lead.email}
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium text-gray-900 dark:text-foreground">
+                                {lead.company || "—"}
+                              </div>
+                              <div className="text-sm text-gray-500 dark:text-muted-foreground">
+                                {lead.position || "—"}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {getLeadStatusBadge(lead.leadStatus || "new", lead.leadScore || 0)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <span className="font-medium">{lead.leadScore || 0}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => updateLeadScoreMutation.mutate({ 
+                                  id: lead.id, 
+                                  leadScore: Math.min((lead.leadScore || 0) + 10, 100) 
+                                })}
+                              >
+                                +10
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {lead.source || "—"}
+                          </TableCell>
+                          <TableCell>
+                            {formatDate(lead.lastContactDate)}
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit Lead
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Mail className="h-4 w-4 mr-2" />
+                                  Send Email
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Phone className="h-4 w-4 mr-2" />
+                                  Call
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            {analytics ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Conversion Funnel</CardTitle>
+                    <CardDescription>Lead progression through sales stages</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span>Total Leads</span>
+                        <span className="font-bold">{analytics.funnel?.totalLeads || 0}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Qualified Leads</span>
+                        <span className="font-bold">{analytics.funnel?.qualifiedLeads || 0}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Proposal Stage</span>
+                        <span className="font-bold">{analytics.funnel?.proposalStage || 0}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Negotiation</span>
+                        <span className="font-bold">{analytics.funnel?.negotiationStage || 0}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Closed Won</span>
+                        <span className="font-bold text-green-600">{analytics.funnel?.closedWon || 0}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Conversion Rates</CardTitle>
+                    <CardDescription>Percentage conversion at each stage</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span>Lead → Qualified</span>
+                        <span className="font-bold">{analytics.conversionRates?.leadToQualified || 0}%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Qualified → Proposal</span>
+                        <span className="font-bold">{analytics.conversionRates?.qualifiedToProposal || 0}%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Proposal → Negotiation</span>
+                        <span className="font-bold">{analytics.conversionRates?.proposalToNegotiation || 0}%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Negotiation → Close</span>
+                        <span className="font-bold text-green-600">{analytics.conversionRates?.negotiationToClose || 0}%</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <div className="text-center p-8">
+                <div className="animate-pulse text-gray-400">Loading analytics...</div>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="scoring" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Zap className="h-5 w-5 mr-2" />
+                  Automated Lead Scoring
+                </CardTitle>
+                <CardDescription>
+                  Run automated lead scoring to update all contact scores based on predefined criteria
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">Scoring Criteria:</h4>
+                    <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                      <li>• Company information: +10 points</li>
+                      <li>• Senior position (CEO, CTO, VP): +20 points</li>
+                      <li>• Referral source: +15 points</li>
+                      <li>• Website source: +10 points</li>
+                    </ul>
+                  </div>
+                  <Button 
+                    onClick={() => leadScoringMutation.mutate()}
+                    disabled={leadScoringMutation.isPending}
+                    className="w-full"
+                  >
+                    {leadScoringMutation.isPending ? "Running Lead Scoring..." : "Run Lead Scoring"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

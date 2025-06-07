@@ -5,6 +5,7 @@ import LeadScoreDistribution from "@/components/dashboard/lead-score-distributio
 import RecentActivities from "@/components/dashboard/recent-activities";
 import TopContacts from "@/components/dashboard/top-contacts";
 import QuickActions from "@/components/dashboard/quick-actions";
+import AutomationPanel from "@/components/dashboard/automation-panel";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import AddContactModal from "@/components/modals/add-contact-modal";
@@ -16,7 +17,7 @@ export default function Dashboard() {
 
   const { data: dashboardStats, isLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
-  });
+  }) as { data?: any; isLoading: boolean };
 
   const handleQuickAction = (action: string) => {
     switch (action) {
@@ -81,8 +82,11 @@ export default function Dashboard() {
           <TopContacts contacts={dashboardStats?.topContacts} />
         </div>
 
-        {/* Quick Actions */}
-        <QuickActions onAction={handleQuickAction} />
+        {/* Automation and Quick Actions Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <AutomationPanel />
+          <QuickActions onAction={handleQuickAction} />
+        </div>
       </main>
 
       <AddContactModal 
