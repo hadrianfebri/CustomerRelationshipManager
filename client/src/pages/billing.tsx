@@ -52,10 +52,7 @@ export default function Billing() {
 
   const changePlanMutation = useMutation({
     mutationFn: async (planId: string) => {
-      return await apiRequest(`/api/billing/change-plan`, {
-        method: "POST",
-        body: JSON.stringify({ planId }),
-      });
+      return await apiRequest("POST", `/api/billing/change-plan`, { planId });
     },
     onSuccess: () => {
       toast({
@@ -75,9 +72,7 @@ export default function Billing() {
 
   const cancelSubscriptionMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest(`/api/billing/cancel`, {
-        method: "POST",
-      });
+      return await apiRequest("POST", `/api/billing/cancel`);
     },
     onSuccess: () => {
       toast({
