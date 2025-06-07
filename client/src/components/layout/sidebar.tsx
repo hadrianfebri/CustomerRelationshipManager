@@ -6,7 +6,8 @@ import {
   Filter, 
   CheckSquare, 
   BarChart, 
-  Mail 
+  Mail,
+  CreditCard
 } from "lucide-react";
 import UserMenu from "./user-menu";
 
@@ -18,6 +19,7 @@ const navigation = [
   { name: "Tasks & Follow-ups", href: "/tasks", icon: CheckSquare },
   { name: "Reports", href: "/reports", icon: BarChart },
   { name: "Email Templates", href: "/email-templates", icon: Mail },
+  { name: "Billing & Plans", href: "/billing", icon: CreditCard },
 ];
 
 export default function Sidebar() {
