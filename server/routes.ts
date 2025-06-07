@@ -569,6 +569,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status: "pending",
             assignedTo: "John Smith",
             dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // Due in 3 days
+            organizationId: 1,
           });
           tasksCreated++;
         }
