@@ -13,6 +13,7 @@ import Tasks from "@/pages/tasks";
 import Reports from "@/pages/reports";
 import EmailTemplates from "@/pages/email-templates";
 import Billing from "@/pages/billing";
+import Team from "@/pages/team";
 import Landing from "@/pages/landing";
 import Sidebar from "@/components/layout/sidebar";
 
@@ -47,6 +48,7 @@ function Router() {
           <Route path="/reports" component={Reports} />
           <Route path="/email-templates" component={EmailTemplates} />
           <Route path="/billing" component={Billing} />
+          <Route path="/team" component={Team} />
           <Route component={NotFound} />
         </Switch>
       </div>

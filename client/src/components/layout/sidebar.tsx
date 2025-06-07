@@ -7,7 +7,8 @@ import {
   CheckSquare, 
   BarChart, 
   Mail,
-  CreditCard
+  CreditCard,
+  UsersIcon
 } from "lucide-react";
 import UserMenu from "./user-menu";
 
@@ -19,6 +20,7 @@ const navigation = [
   { name: "Tasks & Follow-ups", href: "/tasks", icon: CheckSquare },
   { name: "Reports", href: "/reports", icon: BarChart },
   { name: "Email Templates", href: "/email-templates", icon: Mail },
+  { name: "Team Management", href: "/team", icon: UsersIcon },
   { name: "Billing & Plans", href: "/billing", icon: CreditCard },
 ];
 

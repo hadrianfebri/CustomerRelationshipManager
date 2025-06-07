@@ -782,6 +782,198 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Billing routes
+  app.get('/api/billing/current-plan', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.organizationId) {
+        return res.json({ planType: 'free', amount: 0, maxContacts: 100, maxUsers: 3 });
+      }
+
+      // Mock subscription data for demo
+      const subscription = {
+        planType: 'free',
+        amount: 0,
+        maxContacts: 100,
+        maxUsers: 3,
+        cancelAtPeriodEnd: false
+      };
+
+      res.json(subscription);
+    } catch (error) {
+      console.error('Error fetching current plan:', error);
+      res.status(500).json({ message: 'Failed to fetch current plan' });
+    }
+  });
+
+  app.get('/api/billing/usage', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user?.organizationId) {
+        return res.json({ contacts: 0, teamMembers: 1 });
+      }
+
+      const contacts = await storage.getAllContacts();
+      const orgContacts = contacts.filter(c => c.organizationId === user.organizationId);
+      
+      const usage = {
+        contacts: orgContacts.length,
+        teamMembers: 1 // For now, just the current user
+      };
+
+      res.json(usage);
+    } catch (error) {
+      console.error('Error fetching usage:', error);
+      res.status(500).json({ message: 'Failed to fetch usage' });
+    }
+  });
+
+  app.get('/api/billing/invoices', isAuthenticated, async (req: any, res) => {
+    try {
+      // Mock invoice data for demo
+      const invoices = [
+        {
+          id: 1,
+          description: 'Professional Plan - November 2024',
+          amount: 49,
+          date: new Date('2024-11-01'),
+          status: 'paid'
+        }
+      ];
+
+      res.json(invoices);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+      res.status(500).json({ message: 'Failed to fetch invoices' });
+    }
+  });
+
+  app.post('/api/billing/change-plan', isAuthenticated, async (req: any, res) => {
+    try {
+      const { planId } = req.body;
+      
+      // Mock plan change logic
+      console.log(`Changing plan to: ${planId}`);
+      
+      res.json({ success: true, message: 'Plan changed successfully' });
+    } catch (error) {
+      console.error('Error changing plan:', error);
+      res.status(500).json({ message: 'Failed to change plan' });
+    }
+  });
+
+  app.post('/api/billing/cancel', isAuthenticated, async (req: any, res) => {
+    try {
+      // Mock cancellation logic
+      console.log('Cancelling subscription');
+      
+      res.json({ success: true, message: 'Subscription cancelled' });
+    } catch (error) {
+      console.error('Error cancelling subscription:', error);
+      res.status(500).json({ message: 'Failed to cancel subscription' });
+    }
+  });
+
+  // Team management routes
+  app.get('/api/team/members', isAuthenticated, async (req: any, res) => {
+    try {
+      // Mock team members data for demo
+      const teamMembers = [
+        {
+          id: req.user.claims.sub,
+          firstName: req.user.claims.first_name || 'John',
+          lastName: req.user.claims.last_name || 'Doe',
+          email: req.user.claims.email,
+          role: 'user',
+          organizationRole: 'owner',
+          isActive: true,
+          lastLoginAt: new Date()
+        }
+      ];
+
+      res.json(teamMembers);
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+      res.status(500).json({ message: 'Failed to fetch team members' });
+    }
+  });
+
+  app.get('/api/team/invitations', isAuthenticated, async (req: any, res) => {
+    try {
+      // Mock invitations data for demo
+      const invitations = [];
+      res.json(invitations);
+    } catch (error) {
+      console.error('Error fetching invitations:', error);
+      res.status(500).json({ message: 'Failed to fetch invitations' });
+    }
+  });
+
+  app.post('/api/team/invite', isAuthenticated, async (req: any, res) => {
+    try {
+      const { email, role } = req.body;
+      
+      if (!email || !role) {
+        return res.status(400).json({ message: 'Email and role are required' });
+      }
+
+      // Mock invitation logic
+      console.log(`Inviting ${email} as ${role}`);
+      
+      res.json({ success: true, message: 'Invitation sent successfully' });
+    } catch (error) {
+      console.error('Error sending invitation:', error);
+      res.status(500).json({ message: 'Failed to send invitation' });
+    }
+  });
+
+  app.put('/api/team/members/:memberId/role', isAuthenticated, async (req: any, res) => {
+    try {
+      const { memberId } = req.params;
+      const { role } = req.body;
+      
+      // Mock role update logic
+      console.log(`Updating member ${memberId} role to ${role}`);
+      
+      res.json({ success: true, message: 'Role updated successfully' });
+    } catch (error) {
+      console.error('Error updating member role:', error);
+      res.status(500).json({ message: 'Failed to update member role' });
+    }
+  });
+
+  app.delete('/api/team/members/:memberId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { memberId } = req.params;
+      
+      // Mock member removal logic
+      console.log(`Removing member ${memberId}`);
+      
+      res.json({ success: true, message: 'Member removed successfully' });
+    } catch (error) {
+      console.error('Error removing member:', error);
+      res.status(500).json({ message: 'Failed to remove member' });
+    }
+  });
+
+  app.post('/api/team/invitations/:invitationId/resend', isAuthenticated, async (req: any, res) => {
+    try {
+      const { invitationId } = req.params;
+      
+      // Mock invitation resend logic
+      console.log(`Resending invitation ${invitationId}`);
+      
+      res.json({ success: true, message: 'Invitation resent successfully' });
+    } catch (error) {
+      console.error('Error resending invitation:', error);
+      res.status(500).json({ message: 'Failed to resend invitation' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
