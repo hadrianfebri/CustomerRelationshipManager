@@ -1,15 +1,43 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TopBar from "@/components/layout/topbar";
+import AddEmailTemplateModal from "@/components/modals/add-email-template-modal";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Mail, Edit, Trash, Plus } from "lucide-react";
 import { EmailTemplate } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function EmailTemplates() {
+  const [isAddTemplateOpen, setIsAddTemplateOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const { data: templates, isLoading } = useQuery({
     queryKey: ["/api/email-templates"],
+  });
+
+  const deleteTemplateMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("DELETE", `/api/email-templates/${id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/email-templates"] });
+      toast({
+        title: "Template deleted",
+        description: "The email template has been successfully deleted.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete email template.",
+        variant: "destructive",
+      });
+    },
   });
 
   const formatDate = (date: Date | string) => {
@@ -21,7 +49,7 @@ export default function EmailTemplates() {
       <TopBar 
         title="Email Templates" 
         subtitle="Manage your email templates for faster communication"
-        onAddClick={() => console.log("Add template")}
+        onAddClick={() => setIsAddTemplateOpen(true)}
       />
       
       <main className="flex-1 overflow-auto p-6 bg-gray-50 dark:bg-background">
@@ -89,7 +117,12 @@ export default function EmailTemplates() {
                           <Button variant="ghost" size="sm">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => deleteTemplateMutation.mutate(template.id)}
+                            disabled={deleteTemplateMutation.isPending}
+                          >
                             <Trash className="h-4 w-4" />
                           </Button>
                         </div>
@@ -102,6 +135,11 @@ export default function EmailTemplates() {
           )}
         </div>
       </main>
+
+      <AddEmailTemplateModal 
+        open={isAddTemplateOpen}
+        onOpenChange={setIsAddTemplateOpen}
+      />
     </div>
   );
 }
