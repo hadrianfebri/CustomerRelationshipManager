@@ -13,9 +13,11 @@ import { useToast } from "@/hooks/use-toast";
 interface ContactListProps {
   contacts?: Contact[];
   isLoading: boolean;
+  onContactClick?: (contact: Contact) => void;
+  selectedContactId?: number;
 }
 
-export default function ContactList({ contacts, isLoading }: ContactListProps) {
+export default function ContactList({ contacts, isLoading, onContactClick, selectedContactId }: ContactListProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -103,7 +105,13 @@ export default function ContactList({ contacts, isLoading }: ContactListProps) {
           </TableHeader>
           <TableBody>
             {contacts.map((contact) => (
-              <TableRow key={contact.id}>
+              <TableRow 
+                key={contact.id}
+                className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
+                  selectedContactId === contact.id ? 'bg-purple-50 dark:bg-purple-900/20 border-l-4 border-purple-600' : ''
+                }`}
+                onClick={() => onContactClick?.(contact)}
+              >
                 <TableCell>
                   <div className="flex items-center space-x-3">
                     <Avatar className="w-10 h-10">
