@@ -7,6 +7,8 @@ import {
   type EmailTemplate, type InsertEmailTemplate,
   type User, type InsertUser
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, like, or } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -484,4 +486,209 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database Storage Implementation
+export class DatabaseStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  // Contacts
+  async getAllContacts(): Promise<Contact[]> {
+    return await db.select().from(contacts).orderBy(contacts.createdAt);
+  }
+
+  async getContact(id: number): Promise<Contact | undefined> {
+    const [contact] = await db.select().from(contacts).where(eq(contacts.id, id));
+    return contact || undefined;
+  }
+
+  async createContact(insertContact: InsertContact): Promise<Contact> {
+    const [contact] = await db
+      .insert(contacts)
+      .values({
+        ...insertContact,
+        createdAt: new Date(),
+      })
+      .returning();
+    return contact;
+  }
+
+  async updateContact(id: number, contactUpdate: Partial<InsertContact>): Promise<Contact | undefined> {
+    const [contact] = await db
+      .update(contacts)
+      .set(contactUpdate)
+      .where(eq(contacts.id, id))
+      .returning();
+    return contact || undefined;
+  }
+
+  async deleteContact(id: number): Promise<boolean> {
+    const result = await db.delete(contacts).where(eq(contacts.id, id));
+    return result.rowCount > 0;
+  }
+
+  async searchContacts(query: string): Promise<Contact[]> {
+    return await db
+      .select()
+      .from(contacts)
+      .where(
+        or(
+          like(contacts.firstName, `%${query}%`),
+          like(contacts.lastName, `%${query}%`),
+          like(contacts.email, `%${query}%`),
+          like(contacts.company, `%${query}%`)
+        )
+      );
+  }
+
+  // Activities
+  async getAllActivities(): Promise<Activity[]> {
+    return await db.select().from(activities).orderBy(activities.createdAt);
+  }
+
+  async getContactActivities(contactId: number): Promise<Activity[]> {
+    return await db
+      .select()
+      .from(activities)
+      .where(eq(activities.contactId, contactId))
+      .orderBy(activities.createdAt);
+  }
+
+  async createActivity(insertActivity: InsertActivity): Promise<Activity> {
+    const [activity] = await db
+      .insert(activities)
+      .values({
+        ...insertActivity,
+        createdAt: new Date(),
+      })
+      .returning();
+    return activity;
+  }
+
+  // Tasks
+  async getAllTasks(): Promise<Task[]> {
+    return await db.select().from(tasks).orderBy(tasks.createdAt);
+  }
+
+  async getContactTasks(contactId: number): Promise<Task[]> {
+    return await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.contactId, contactId))
+      .orderBy(tasks.createdAt);
+  }
+
+  async createTask(insertTask: InsertTask): Promise<Task> {
+    const [task] = await db
+      .insert(tasks)
+      .values({
+        ...insertTask,
+        createdAt: new Date(),
+      })
+      .returning();
+    return task;
+  }
+
+  async updateTask(id: number, taskUpdate: Partial<InsertTask>): Promise<Task | undefined> {
+    const [task] = await db
+      .update(tasks)
+      .set(taskUpdate)
+      .where(eq(tasks.id, id))
+      .returning();
+    return task || undefined;
+  }
+
+  async deleteTask(id: number): Promise<boolean> {
+    const result = await db.delete(tasks).where(eq(tasks.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Deals
+  async getAllDeals(): Promise<Deal[]> {
+    return await db.select().from(deals).orderBy(deals.createdAt);
+  }
+
+  async getContactDeals(contactId: number): Promise<Deal[]> {
+    return await db
+      .select()
+      .from(deals)
+      .where(eq(deals.contactId, contactId))
+      .orderBy(deals.createdAt);
+  }
+
+  async createDeal(insertDeal: InsertDeal): Promise<Deal> {
+    const [deal] = await db
+      .insert(deals)
+      .values({
+        ...insertDeal,
+        createdAt: new Date(),
+      })
+      .returning();
+    return deal;
+  }
+
+  async updateDeal(id: number, dealUpdate: Partial<InsertDeal>): Promise<Deal | undefined> {
+    const [deal] = await db
+      .update(deals)
+      .set(dealUpdate)
+      .where(eq(deals.id, id))
+      .returning();
+    return deal || undefined;
+  }
+
+  async deleteDeal(id: number): Promise<boolean> {
+    const result = await db.delete(deals).where(eq(deals.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Email Templates
+  async getAllEmailTemplates(): Promise<EmailTemplate[]> {
+    return await db.select().from(emailTemplates).orderBy(emailTemplates.createdAt);
+  }
+
+  async getEmailTemplate(id: number): Promise<EmailTemplate | undefined> {
+    const [template] = await db.select().from(emailTemplates).where(eq(emailTemplates.id, id));
+    return template || undefined;
+  }
+
+  async createEmailTemplate(insertTemplate: InsertEmailTemplate): Promise<EmailTemplate> {
+    const [template] = await db
+      .insert(emailTemplates)
+      .values({
+        ...insertTemplate,
+        createdAt: new Date(),
+      })
+      .returning();
+    return template;
+  }
+
+  async updateEmailTemplate(id: number, templateUpdate: Partial<InsertEmailTemplate>): Promise<EmailTemplate | undefined> {
+    const [template] = await db
+      .update(emailTemplates)
+      .set(templateUpdate)
+      .where(eq(emailTemplates.id, id))
+      .returning();
+    return template || undefined;
+  }
+
+  async deleteEmailTemplate(id: number): Promise<boolean> {
+    const result = await db.delete(emailTemplates).where(eq(emailTemplates.id, id));
+    return result.rowCount > 0;
+  }
+}
+
+export const storage = new DatabaseStorage();
