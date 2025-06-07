@@ -6,6 +6,7 @@ import RecentActivities from "@/components/dashboard/recent-activities";
 import TopContacts from "@/components/dashboard/top-contacts";
 import QuickActions from "@/components/dashboard/quick-actions";
 import AutomationPanel from "@/components/dashboard/automation-panel";
+import AIAutomationPanel from "@/components/dashboard/ai-automation-panel";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import AddContactModal from "@/components/modals/add-contact-modal";
@@ -80,6 +81,11 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <RecentActivities activities={dashboardStats?.recentActivities} />
           <TopContacts contacts={dashboardStats?.topContacts} />
+        </div>
+
+        {/* AI Automation Panel */}
+        <div className="mb-8">
+          <AIAutomationPanel />
         </div>
 
         {/* Automation and Quick Actions Row */}
