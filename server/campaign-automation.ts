@@ -305,10 +305,10 @@ Best,
 
 I created a quick ROI calculation for {{company}} based on typical {{industry}} metrics:
 
-Potential Annual Savings: ${{estimatedSavings}}
-• Time saved on manual tasks: {{timeSavings}} hours/month
-• Increased close rate: {{closeRateIncrease}}%
-• Reduced lead response time: {{responseTimeImprovement}}
+Potential Annual Savings: $50,000
+• Time saved on manual tasks: 15 hours/month
+• Increased close rate: 25-40%
+• Reduced lead response time: 75%
 
 See your full calculation: {{roiCalculatorLink}}
 
@@ -316,7 +316,7 @@ Questions about these numbers? Let's talk: {{calendarLink}}
 
 Best,
 {{senderName}}`,
-            mergeTags: ['firstName', 'company', 'industry', 'estimatedSavings', 'timeSavings', 'closeRateIncrease', 'responseTimeImprovement', 'roiCalculatorLink', 'calendarLink', 'senderName']
+            mergeTags: ['firstName', 'company', 'industry', 'roiCalculatorLink', 'calendarLink', 'senderName']
           },
           sendTimeOptimization: true
         }
@@ -326,11 +326,11 @@ Best,
           'firstName': 'contact.firstName',
           'company': 'contact.company',
           'industry': 'contact.industry',
-          'caseStudyLink': 'https://salespro.com/case-studies/{{industry}}',
+          'caseStudyLink': 'https://salespro.com/case-studies/tech',
           'suggestedTime': 'dynamic_time_suggestion',
           'senderName': 'Mike Rodriguez',
-          'estimatedSavings': 'calculated_roi_savings',
-          'timeSavings': 'calculated_time_savings',
+          'estimatedSavings': '50000',
+          'timeSavings': '15',
           'closeRateIncrease': '25-40',
           'responseTimeImprovement': '75%',
           'roiCalculatorLink': 'https://salespro.com/roi-calculator',
@@ -813,6 +813,12 @@ Cheering your success,
         return this.calculateTimeSavings(contact).toString();
       case 'dynamic_time_suggestion':
         return this.suggestOptimalTime(contact);
+      case 'calculated_improvement_metrics':
+        return '25-40';
+      case 'calculated_revenue_impact':
+        return '$15,000';
+      case 'calculated_offer_expiry':
+        return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
       default:
         return tagPath; // Return as-is if not a dynamic value
     }

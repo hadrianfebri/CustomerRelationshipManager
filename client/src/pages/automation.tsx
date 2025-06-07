@@ -79,7 +79,10 @@ export default function AutomationPage() {
   });
 
   const bulkScoringMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/automation/bulk-score-leads"),
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/automation/bulk-score-leads");
+      return await response.json();
+    },
     onSuccess: (data: AutomationMetrics) => {
       toast({
         title: "Bulk Lead Scoring Complete",
@@ -90,7 +93,10 @@ export default function AutomationPage() {
   });
 
   const lifecycleRulesMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/automation/lifecycle-rules"),
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/automation/lifecycle-rules");
+      return await response.json();
+    },
     onSuccess: (data: AutomationMetrics) => {
       toast({
         title: "Lifecycle Rules Applied",
