@@ -139,9 +139,19 @@ export default function Tasks() {
                         {task.assignedTo || "Unassigned"}
                       </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm">
-                          Mark Complete
-                        </Button>
+                        <div className="flex items-center space-x-2">
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => deleteTaskMutation.mutate(task.id)}
+                            disabled={deleteTaskMutation.isPending}
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
