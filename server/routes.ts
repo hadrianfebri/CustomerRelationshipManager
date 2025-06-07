@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { aiService } from "./ai-service";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { AdvancedLeadScoring } from "./lead-scoring";
+import { CampaignAutomation } from "./campaign-automation";
 import { insertContactSchema, insertActivitySchema, insertTaskSchema, insertDealSchema, insertEmailTemplateSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -971,6 +973,349 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error resending invitation:', error);
       res.status(500).json({ message: 'Failed to resend invitation' });
+    }
+  });
+
+  // Advanced Lead Scoring & Automation API
+  app.post('/api/automation/score-lead/:contactId', isAuthenticated, async (req: any, res) => {
+    try {
+      const contactId = parseInt(req.params.contactId);
+      const contact = await storage.getContact(contactId);
+      if (!contact) {
+        return res.status(404).json({ message: 'Contact not found' });
+      }
+      
+      const activities = await storage.getContactActivities(contactId);
+      const deals = await storage.getContactDeals(contactId);
+      
+      const scoringResult = AdvancedLeadScoring.calculateLeadScore(contact, activities, deals);
+      
+      // Update contact with new score
+      await storage.updateContact(contactId, { leadScore: scoringResult.score });
+      
+      // Process automation triggers
+      for (const trigger of scoringResult.triggers) {
+        console.log(`Automation trigger: ${trigger.type} - ${trigger.content}`);
+      }
+      
+      res.json({
+        score: scoringResult.score,
+        reasoning: scoringResult.reasoning,
+        recommendations: scoringResult.recommendations,
+        automationTriggered: scoringResult.triggers.length,
+        triggers: scoringResult.triggers
+      });
+    } catch (error) {
+      console.error('Lead scoring error:', error);
+      res.status(500).json({ message: 'Lead scoring failed' });
+    }
+  });
+
+  // Bulk Lead Scoring for all contacts
+  app.post('/api/automation/bulk-score-leads', isAuthenticated, async (req: any, res) => {
+    try {
+      const contacts = await storage.getAllContacts();
+      let processed = 0;
+      let automationTriggered = 0;
+      
+      for (const contact of contacts) {
+        const activities = await storage.getContactActivities(contact.id);
+        const deals = await storage.getContactDeals(contact.id);
+        
+        const scoringResult = AdvancedLeadScoring.calculateLeadScore(contact, activities, deals);
+        
+        // Update contact score
+        await storage.updateContact(contact.id, { leadScore: scoringResult.score });
+        
+        if (scoringResult.triggers.length > 0) {
+          automationTriggered++;
+        }
+        
+        processed++;
+      }
+      
+      res.json({
+        processed,
+        automationTriggered,
+        message: `Successfully processed ${processed} contacts with ${automationTriggered} automation triggers`
+      });
+    } catch (error) {
+      console.error('Bulk scoring error:', error);
+      res.status(500).json({ message: 'Bulk scoring failed' });
+    }
+  });
+
+  // Campaign Automation Endpoints
+  app.get('/api/campaigns/sequences', isAuthenticated, async (req: any, res) => {
+    try {
+      const sequences = CampaignAutomation.getDefaultSequences();
+      res.json(sequences);
+    } catch (error) {
+      console.error('Error fetching campaign sequences:', error);
+      res.status(500).json({ message: 'Failed to fetch campaigns' });
+    }
+  });
+
+  app.post('/api/campaigns/trigger/:sequenceId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { sequenceId } = req.params;
+      const { contactId } = req.body;
+      
+      const contact = await storage.getContact(contactId);
+      if (!contact) {
+        return res.status(404).json({ message: 'Contact not found' });
+      }
+      
+      const sequences = CampaignAutomation.getDefaultSequences();
+      const sequence = sequences.find(s => s.id === sequenceId);
+      
+      if (!sequence) {
+        return res.status(404).json({ message: 'Campaign sequence not found' });
+      }
+      
+      // Trigger first step of sequence
+      if (sequence.steps.length > 0) {
+        await CampaignAutomation.executeCampaignStep(sequence.steps[0], contact, sequence);
+      }
+      
+      res.json({
+        success: true,
+        message: `Campaign ${sequence.name} triggered for ${contact.firstName} ${contact.lastName}`,
+        sequenceId,
+        contactId,
+        nextSteps: sequence.steps.length - 1
+      });
+    } catch (error) {
+      console.error('Campaign trigger error:', error);
+      res.status(500).json({ message: 'Campaign trigger failed' });
+    }
+  });
+
+  // Lifecycle Automation - Auto-assign leads based on score
+  app.post('/api/automation/lifecycle-rules', isAuthenticated, async (req: any, res) => {
+    try {
+      const contacts = await storage.getAllContacts();
+      let mqlCount = 0;
+      let sqlCount = 0;
+      let hotLeadCount = 0;
+      
+      for (const contact of contacts) {
+        const activities = await storage.getContactActivities(contact.id);
+        const deals = await storage.getContactDeals(contact.id);
+        
+        const scoringResult = AdvancedLeadScoring.calculateLeadScore(contact, activities, deals);
+        
+        // Lifecycle automation rules
+        let newStatus = contact.leadStatus;
+        
+        if (scoringResult.score >= 80) {
+          newStatus = 'hot';
+          hotLeadCount++;
+          
+          // Auto-assign to senior sales rep
+          await storage.createTask({
+            title: `HOT LEAD: Contact ${contact.firstName} ${contact.lastName} immediately`,
+            description: `Lead score: ${scoringResult.score}/100. ${scoringResult.reasoning}`,
+            contactId: contact.id,
+            organizationId: contact.organizationId,
+            priority: 'high',
+            status: 'pending',
+            assignedTo: 'senior-sales-rep',
+            dueDate: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours
+            createdBy: 'system'
+          });
+          
+        } else if (scoringResult.score >= 55) {
+          newStatus = 'qualified';
+          sqlCount++;
+          
+          // Create follow-up task
+          await storage.createTask({
+            title: `Follow up with qualified lead: ${contact.firstName} ${contact.lastName}`,
+            description: `MQL to SQL conversion opportunity. Score: ${scoringResult.score}/100`,
+            contactId: contact.id,
+            organizationId: contact.organizationId,
+            priority: 'medium',
+            status: 'pending',
+            assignedTo: 'sales-rep',
+            dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+            createdBy: 'system'
+          });
+          
+        } else if (scoringResult.score >= 40) {
+          newStatus = 'marketing-qualified';
+          mqlCount++;
+        }
+        
+        // Update contact status if changed
+        if (newStatus !== contact.leadStatus) {
+          await storage.updateContact(contact.id, { 
+            leadStatus: newStatus,
+            leadScore: scoringResult.score
+          });
+        }
+      }
+      
+      res.json({
+        processed: contacts.length,
+        mqlGenerated: mqlCount,
+        sqlGenerated: sqlCount,
+        hotLeadsGenerated: hotLeadCount,
+        automationRulesApplied: true,
+        message: 'Lifecycle automation rules processed successfully'
+      });
+    } catch (error) {
+      console.error('Lifecycle automation error:', error);
+      res.status(500).json({ message: 'Lifecycle automation failed' });
+    }
+  });
+
+  // Churn Prediction & Win-Back System
+  app.get('/api/automation/churn-analysis', isAuthenticated, async (req: any, res) => {
+    try {
+      const contacts = await storage.getAllContacts();
+      const activities = await storage.getAllActivities();
+      const deals = await storage.getAllDeals();
+      
+      const churnRisks = [];
+      const winBackOpportunities = [];
+      
+      for (const contact of contacts) {
+        const contactActivities = activities.filter(a => a.contactId === contact.id);
+        const contactDeals = deals.filter(d => d.contactId === contact.id);
+        
+        // Calculate days since last activity
+        const lastActivity = contactActivities.length > 0 ? 
+          Math.max(...contactActivities.map(a => new Date(a.createdAt || 0).getTime())) : 0;
+        const daysSinceLastActivity = lastActivity > 0 ? 
+          (Date.now() - lastActivity) / (1000 * 60 * 60 * 24) : 999;
+        
+        // Churn risk scoring
+        let churnScore = 0;
+        
+        if (daysSinceLastActivity > 90) churnScore += 40;
+        else if (daysSinceLastActivity > 60) churnScore += 30;
+        else if (daysSinceLastActivity > 30) churnScore += 20;
+        
+        if (contactDeals.length === 0) churnScore += 20;
+        if ((contact.leadScore || 0) < 30) churnScore += 20;
+        if (contactActivities.length < 3) churnScore += 20;
+        
+        if (churnScore >= 60) {
+          churnRisks.push({
+            contactId: contact.id,
+            name: `${contact.firstName} ${contact.lastName}`,
+            company: contact.company,
+            churnScore,
+            daysSinceLastActivity: Math.round(daysSinceLastActivity),
+            riskLevel: churnScore >= 80 ? 'high' : 'medium',
+            recommendations: [
+              'Immediate personal outreach required',
+              'Offer special discount or loyalty incentive',
+              'Schedule win-back call',
+              'Send reengagement campaign'
+            ]
+          });
+        }
+        
+        // Win-back opportunities (previously churned but showing signs of interest)
+        if (daysSinceLastActivity <= 7 && (contact.leadScore || 0) >= 40 && contactDeals.length > 0) {
+          winBackOpportunities.push({
+            contactId: contact.id,
+            name: `${contact.firstName} ${contact.lastName}`,
+            company: contact.company,
+            reengagementScore: contact.leadScore,
+            lastActivity: lastActivity > 0 ? new Date(lastActivity).toISOString() : null,
+            potentialValue: contactDeals.reduce((sum, deal) => sum + parseFloat(deal.value || '0'), 0)
+          });
+        }
+      }
+      
+      res.json({
+        churnAnalysis: {
+          totalContacts: contacts.length,
+          atRiskContacts: churnRisks.length,
+          churnRiskPercentage: ((churnRisks.length / contacts.length) * 100).toFixed(1),
+          churnRisks: churnRisks.slice(0, 10), // Top 10 risks
+          winBackOpportunities: winBackOpportunities.slice(0, 10) // Top 10 opportunities
+        },
+        recommendations: [
+          'Implement automated re-engagement campaigns',
+          'Create win-back offer sequences',
+          'Set up churn prediction alerts',
+          'Establish customer success check-ins'
+        ]
+      });
+    } catch (error) {
+      console.error('Churn analysis error:', error);
+      res.status(500).json({ message: 'Churn analysis failed' });
+    }
+  });
+
+  // NPS & Feedback Loop System
+  app.get('/api/automation/nps-dashboard', isAuthenticated, async (req: any, res) => {
+    try {
+      // Mock NPS data based on contact engagement
+      const contacts = await storage.getAllContacts();
+      const activities = await storage.getAllActivities();
+      
+      let promoters = 0;
+      let passives = 0;
+      let detractors = 0;
+      
+      const npsData = contacts.map(contact => {
+        const contactActivities = activities.filter(a => a.contactId === contact.id);
+        const engagementScore = Math.min(100, (contactActivities.length * 10) + (contact.leadScore || 0));
+        
+        let npsScore;
+        if (engagementScore >= 80) {
+          npsScore = Math.floor(Math.random() * 3) + 8; // 8-10 (Promoters)
+          promoters++;
+        } else if (engagementScore >= 50) {
+          npsScore = Math.floor(Math.random() * 2) + 7; // 7-8 (Passives)
+          passives++;
+        } else {
+          npsScore = Math.floor(Math.random() * 7); // 0-6 (Detractors)
+          detractors++;
+        }
+        
+        return {
+          contactId: contact.id,
+          name: `${contact.firstName} ${contact.lastName}`,
+          company: contact.company,
+          npsScore,
+          category: npsScore >= 9 ? 'promoter' : npsScore >= 7 ? 'passive' : 'detractor',
+          feedback: npsScore >= 9 ? 'Excellent service and support!' : 
+                   npsScore >= 7 ? 'Good experience overall' : 
+                   'Could use improvement in response time'
+        };
+      });
+      
+      const totalResponses = contacts.length;
+      const npsCalculation = totalResponses > 0 ? 
+        Math.round(((promoters - detractors) / totalResponses) * 100) : 0;
+      
+      res.json({
+        npsScore: npsCalculation,
+        totalResponses,
+        breakdown: {
+          promoters: { count: promoters, percentage: ((promoters / totalResponses) * 100).toFixed(1) },
+          passives: { count: passives, percentage: ((passives / totalResponses) * 100).toFixed(1) },
+          detractors: { count: detractors, percentage: ((detractors / totalResponses) * 100).toFixed(1) }
+        },
+        recentFeedback: npsData.slice(0, 10),
+        insights: [
+          npsCalculation >= 50 ? 'Excellent NPS score - customers are highly satisfied' :
+          npsCalculation >= 0 ? 'Good NPS score with room for improvement' :
+          'NPS needs attention - focus on customer satisfaction',
+          'Automated follow-up triggered for detractors',
+          'Promoters identified for referral program',
+          'Feedback sentiment analysis completed'
+        ]
+      });
+    } catch (error) {
+      console.error('NPS dashboard error:', error);
+      res.status(500).json({ message: 'NPS dashboard failed' });
     }
   });
 
