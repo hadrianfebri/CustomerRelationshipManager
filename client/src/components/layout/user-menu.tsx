@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +16,17 @@ export default function UserMenu() {
   const { user, isAuthenticated } = useAuth();
 
   if (!isAuthenticated || !user) {
-    return null;
+    return (
+      <div className="flex items-center space-x-3">
+        <Avatar className="w-10 h-10">
+          <AvatarFallback className="bg-blue-100 text-blue-700">U</AvatarFallback>
+        </Avatar>
+        <div>
+          <p className="text-sm font-medium text-gray-900 dark:text-foreground">Guest User</p>
+          <p className="text-xs text-gray-500 dark:text-muted-foreground">Not signed in</p>
+        </div>
+      </div>
+    );
   }
 
   const handleLogout = () => {
