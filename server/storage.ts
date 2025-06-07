@@ -687,7 +687,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteEmailTemplate(id: number): Promise<boolean> {
     const result = await db.delete(emailTemplates).where(eq(emailTemplates.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 }
 
