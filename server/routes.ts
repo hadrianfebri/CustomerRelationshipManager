@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { aiService } from "./ai-service";
 import { insertContactSchema, insertActivitySchema, insertTaskSchema, insertDealSchema, insertEmailTemplateSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -627,6 +628,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const totalScore = contacts.reduce((sum, contact) => sum + (contact.leadScore || 0), 0);
     return contacts.length > 0 ? Math.round(totalScore / contacts.length) : 0;
   }
+
+  // AI Automation routes
+  app.post("/api/ai/lead-score/:contactId", async (req, res) => {
+    try {
+      const contactId = parseInt(req.params.contactId);
+      const contact = await storage.getContact(contactId);
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      
+      const activities = await storage.getContactActivities(contactId);
+      const deals = await storage.getContactDeals(contactId);
+      
+      const analysis = await aiService.calculateAILeadScore(contact, activities, deals);
+      
+      // Update contact with new AI-calculated score
+      await storage.updateContact(contactId, { leadScore: analysis.score });
+      
+      res.json(analysis);
+    } catch (error) {
+      console.error("AI lead scoring error:", error);
+      res.status(500).json({ message: "AI lead scoring failed" });
+    }
+  });
+
+  app.post("/api/ai/sentiment-analysis", async (req, res) => {
+    try {
+      const { text } = req.body;
+      if (!text) {
+        return res.status(400).json({ message: "Text is required" });
+      }
+      
+      const analysis = await aiService.analyzeSentiment(text);
+      res.json(analysis);
+    } catch (error) {
+      console.error("Sentiment analysis error:", error);
+      res.status(500).json({ message: "Sentiment analysis failed" });
+    }
+  });
+
+  app.post("/api/ai/follow-up-recommendations/:contactId", async (req, res) => {
+    try {
+      const contactId = parseInt(req.params.contactId);
+      const contact = await storage.getContact(contactId);
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      
+      const activities = await storage.getContactActivities(contactId);
+      const recommendations = await aiService.generateFollowUpRecommendations(contact, activities);
+      
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Follow-up recommendations error:", error);
+      res.status(500).json({ message: "Failed to generate recommendations" });
+    }
+  });
+
+  app.post("/api/ai/generate-email", async (req, res) => {
+    try {
+      const { contactId, purpose, context } = req.body;
+      const contact = await storage.getContact(contactId);
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      
+      const emailContent = await aiService.generateEmailContent(contact, purpose, context);
+      res.json(emailContent);
+    } catch (error) {
+      console.error("Email generation error:", error);
+      res.status(500).json({ message: "Failed to generate email" });
+    }
+  });
+
+  app.post("/api/ai/analyze-deal/:dealId", async (req, res) => {
+    try {
+      const dealId = parseInt(req.params.dealId);
+      const deal = await storage.getAllDeals().then(deals => deals.find(d => d.id === dealId));
+      if (!deal) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      
+      const contact = await storage.getContact(deal.contactId || 0);
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      
+      const activities = await storage.getContactActivities(contact.id);
+      const analysis = await aiService.analyzeDealProbability(deal, contact, activities);
+      
+      // Update deal with suggested probability
+      await storage.updateDeal(dealId, { probability: analysis.suggestedProbability });
+      
+      res.json(analysis);
+    } catch (error) {
+      console.error("Deal analysis error:", error);
+      res.status(500).json({ message: "Deal analysis failed" });
+    }
+  });
+
+  app.post("/api/ai/auto-score-all-leads", async (req, res) => {
+    try {
+      const contacts = await storage.getAllContacts();
+      let processed = 0;
+      const results = [];
+      
+      for (const contact of contacts) {
+        try {
+          const activities = await storage.getContactActivities(contact.id);
+          const deals = await storage.getContactDeals(contact.id);
+          
+          const analysis = await aiService.calculateAILeadScore(contact, activities, deals);
+          await storage.updateContact(contact.id, { leadScore: analysis.score });
+          
+          results.push({
+            contactId: contact.id,
+            name: `${contact.firstName} ${contact.lastName}`,
+            oldScore: contact.leadScore,
+            newScore: analysis.score,
+            reasoning: analysis.reasoning
+          });
+          processed++;
+        } catch (error) {
+          console.error(`Failed to process contact ${contact.id}:`, error);
+        }
+      }
+      
+      res.json({ 
+        message: `AI scoring completed for ${processed} contacts`,
+        processed,
+        results
+      });
+    } catch (error) {
+      console.error("Bulk AI scoring error:", error);
+      res.status(500).json({ message: "Bulk AI scoring failed" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
