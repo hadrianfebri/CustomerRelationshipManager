@@ -104,7 +104,7 @@ export default function AddEmailTemplateModal({ open, onOpenChange }: AddEmailTe
             <Input
               id="subject"
               {...form.register("subject")}
-              placeholder="Welcome to our platform, {{firstName}}!"
+              placeholder="Welcome to our platform, {firstName}!"
             />
             {form.formState.errors.subject && (
               <p className="text-sm text-red-500 mt-1">{form.formState.errors.subject.message}</p>
@@ -116,7 +116,7 @@ export default function AddEmailTemplateModal({ open, onOpenChange }: AddEmailTe
             <Textarea
               id="body"
               {...form.register("body")}
-              placeholder="Hi {{firstName}},&#10;&#10;Welcome to our platform! We're excited to have you on board.&#10;&#10;Best regards,&#10;The Team"
+              placeholder="Hi {firstName},\n\nWelcome to our platform! We're excited to have you on board.\n\nBest regards,\nThe Team"
               rows={8}
               className="font-mono text-sm"
             />
@@ -139,7 +139,7 @@ export default function AddEmailTemplateModal({ open, onOpenChange }: AddEmailTe
               Available Merge Tags:
             </p>
             <p className="text-xs text-blue-700 dark:text-blue-400">
-              {{firstName}}, {{lastName}}, {{email}}, {{company}}, {{position}}
+              {"{"}firstName{"}"}, {"{"}lastName{"}"}, {"{"}email{"}"}, {"{"}company{"}"}, {"{"}position{"}"}
             </p>
           </div>
 

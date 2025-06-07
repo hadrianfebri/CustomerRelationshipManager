@@ -1,18 +1,44 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TopBar from "@/components/layout/topbar";
 import AddTaskModal from "@/components/modals/add-task-modal";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckSquare, Clock, AlertTriangle } from "lucide-react";
+import { CheckSquare, Clock, AlertTriangle, Trash, Edit } from "lucide-react";
 import { Task } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Tasks() {
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ["/api/tasks"],
+  });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("DELETE", `/api/tasks/${id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({
+        title: "Task deleted",
+        description: "The task has been successfully deleted.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete task.",
+        variant: "destructive",
+      });
+    },
   });
 
   const getPriorityBadge = (priority: string) => {

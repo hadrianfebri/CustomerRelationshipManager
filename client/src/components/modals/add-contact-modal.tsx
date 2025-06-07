@@ -34,6 +34,7 @@ export default function AddContactModal({ open, onOpenChange }: AddContactModalP
       leadStatus: "new",
       source: "",
       notes: "",
+      tags: [],
     },
   });
 
@@ -52,71 +53,67 @@ export default function AddContactModal({ open, onOpenChange }: AddContactModalP
       form.reset();
       onOpenChange(false);
     },
-    onError: (error: any) => {
+    onError: () => {
       toast({
         title: "Error",
-        description: error.message || "Failed to create contact",
+        description: "Failed to create contact.",
         variant: "destructive",
       });
     },
   });
 
-  const onSubmit = (data: InsertContact) => {
+  const handleSubmit = (data: InsertContact) => {
     createContactMutation.mutate(data);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Contact</DialogTitle>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="firstName">First Name *</Label>
+              <Label htmlFor="firstName">First Name</Label>
               <Input
                 id="firstName"
                 {...form.register("firstName")}
                 placeholder="John"
               />
               {form.formState.errors.firstName && (
-                <p className="text-sm text-destructive mt-1">
-                  {form.formState.errors.firstName.message}
-                </p>
+                <p className="text-sm text-red-500 mt-1">{form.formState.errors.firstName.message}</p>
               )}
             </div>
+            
             <div>
-              <Label htmlFor="lastName">Last Name *</Label>
+              <Label htmlFor="lastName">Last Name</Label>
               <Input
                 id="lastName"
                 {...form.register("lastName")}
                 placeholder="Doe"
               />
               {form.formState.errors.lastName && (
-                <p className="text-sm text-destructive mt-1">
-                  {form.formState.errors.lastName.message}
-                </p>
+                <p className="text-sm text-red-500 mt-1">{form.formState.errors.lastName.message}</p>
               )}
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="email">Email *</Label>
-            <Input
-              id="email"
-              type="email"
-              {...form.register("email")}
-              placeholder="john.doe@example.com"
-            />
-            {form.formState.errors.email && (
-              <p className="text-sm text-destructive mt-1">
-                {form.formState.errors.email.message}
-              </p>
-            )}
-          </div>
-
           <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                {...form.register("email")}
+                placeholder="john@example.com"
+              />
+              {form.formState.errors.email && (
+                <p className="text-sm text-red-500 mt-1">{form.formState.errors.email.message}</p>
+              )}
+            </div>
+            
             <div>
               <Label htmlFor="phone">Phone</Label>
               <Input
@@ -125,6 +122,9 @@ export default function AddContactModal({ open, onOpenChange }: AddContactModalP
                 placeholder="+1 (555) 123-4567"
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="company">Company</Label>
               <Input
@@ -133,37 +133,54 @@ export default function AddContactModal({ open, onOpenChange }: AddContactModalP
                 placeholder="Acme Corp"
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+            
             <div>
               <Label htmlFor="position">Position</Label>
               <Input
                 id="position"
                 {...form.register("position")}
-                placeholder="CEO"
+                placeholder="Marketing Manager"
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <Label htmlFor="leadStatus">Lead Status</Label>
-              <Select
-                value={form.watch("leadStatus")}
-                onValueChange={(value) => form.setValue("leadStatus", value)}
-              >
+              <Select onValueChange={(value) => form.setValue("leadStatus", value as "new" | "qualified" | "proposal" | "negotiation" | "closed-won" | "closed-lost")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="warm">Warm</SelectItem>
-                  <SelectItem value="hot">Hot</SelectItem>
-                  <SelectItem value="cold">Cold</SelectItem>
+                  <SelectItem value="qualified">Qualified</SelectItem>
+                  <SelectItem value="proposal">Proposal</SelectItem>
+                  <SelectItem value="negotiation">Negotiation</SelectItem>
+                  <SelectItem value="closed-won">Closed Won</SelectItem>
+                  <SelectItem value="closed-lost">Closed Lost</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="source">Source</Label>
+              <Select onValueChange={(value) => form.setValue("source", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select source" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="website">Website</SelectItem>
+                  <SelectItem value="referral">Referral</SelectItem>
+                  <SelectItem value="social-media">Social Media</SelectItem>
+                  <SelectItem value="email-campaign">Email Campaign</SelectItem>
+                  <SelectItem value="cold-call">Cold Call</SelectItem>
+                  <SelectItem value="trade-show">Trade Show</SelectItem>
+                  <SelectItem value="partner">Partner</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div>
               <Label htmlFor="leadScore">Lead Score</Label>
               <Input
@@ -173,14 +190,6 @@ export default function AddContactModal({ open, onOpenChange }: AddContactModalP
                 max="100"
                 {...form.register("leadScore", { valueAsNumber: true })}
                 placeholder="0"
-              />
-            </div>
-            <div>
-              <Label htmlFor="source">Source</Label>
-              <Input
-                id="source"
-                {...form.register("source")}
-                placeholder="Website, Referral, etc."
               />
             </div>
           </div>
