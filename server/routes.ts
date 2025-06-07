@@ -2,12 +2,28 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { aiService } from "./ai-service";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertContactSchema, insertActivitySchema, insertTaskSchema, insertDealSchema, insertEmailTemplateSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Contacts routes
-  app.get("/api/contacts", async (req, res) => {
+  // Auth middleware
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Protected Contacts routes
+  app.get("/api/contacts", isAuthenticated, async (req, res) => {
     try {
       const { search } = req.query;
       let contacts;
@@ -39,7 +55,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/contacts", async (req, res) => {
+  app.post("/api/contacts", isAuthenticated, async (req, res) => {
     try {
       const contactData = insertContactSchema.parse(req.body);
       const contact = await storage.createContact(contactData);
@@ -87,7 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Activities routes
-  app.get("/api/activities", async (req, res) => {
+  app.get("/api/activities", isAuthenticated, async (req, res) => {
     try {
       const { contactId } = req.query;
       let activities;
@@ -104,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/activities", async (req, res) => {
+  app.post("/api/activities", isAuthenticated, async (req, res) => {
     try {
       const activityData = insertActivitySchema.parse(req.body);
       const activity = await storage.createActivity(activityData);
@@ -118,7 +134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Tasks routes
-  app.get("/api/tasks", async (req, res) => {
+  app.get("/api/tasks", isAuthenticated, async (req, res) => {
     try {
       const { contactId } = req.query;
       let tasks;
