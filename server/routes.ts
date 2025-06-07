@@ -518,6 +518,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type: "email",
         title: `Email sent: ${subject}`,
         description: `Sent email using template: ${template.name}`,
+        organizationId: 1,
       });
       
       // In a real implementation, you would send the actual email here
@@ -553,6 +554,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status: "pending",
             assignedTo: "John Smith",
             dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Due tomorrow
+            organizationId: 1,
           });
           tasksCreated++;
         }

@@ -534,6 +534,7 @@ export class DatabaseStorage implements IStorage {
       .insert(contacts)
       .values({
         ...insertContact,
+        organizationId: 1, // Default organization for now
         createdAt: new Date(),
       })
       .returning();
@@ -586,6 +587,7 @@ export class DatabaseStorage implements IStorage {
       .insert(activities)
       .values({
         ...insertActivity,
+        organizationId: 1, // Default organization for now
         createdAt: new Date(),
       })
       .returning();
@@ -610,6 +612,7 @@ export class DatabaseStorage implements IStorage {
       .insert(tasks)
       .values({
         ...insertTask,
+        organizationId: 1, // Default organization for now
         createdAt: new Date(),
       })
       .returning();
@@ -648,6 +651,7 @@ export class DatabaseStorage implements IStorage {
       .insert(deals)
       .values({
         ...insertDeal,
+        organizationId: 1, // Default organization for now
         createdAt: new Date(),
       })
       .returning();
