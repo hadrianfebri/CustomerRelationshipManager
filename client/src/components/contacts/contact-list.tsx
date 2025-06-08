@@ -9,6 +9,7 @@ import { Contact } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import EditContactModal from "@/components/modals/edit-contact-modal";
 
 interface ContactListProps {
   contacts?: Contact[];
@@ -20,6 +21,7 @@ interface ContactListProps {
 export default function ContactList({ contacts, isLoading, onContactClick, selectedContactId }: ContactListProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [editContact, setEditContact] = useState<Contact | null>(null);
 
   const deleteContactMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -87,6 +89,48 @@ export default function ContactList({ contacts, isLoading, onContactClick, selec
   const formatDate = (date: Date | string | null) => {
     if (!date) return "Never";
     return new Date(date).toLocaleDateString();
+  };
+
+  const handleEdit = (contact: Contact, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditContact(contact);
+  };
+
+  const handleSendEmail = (contact: Contact, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const subject = `Follow up with ${contact.firstName} ${contact.lastName}`;
+    const body = `Hi ${contact.firstName},\n\nI wanted to follow up with you regarding...`;
+    const mailtoUrl = `mailto:${contact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoUrl, '_blank');
+    
+    toast({
+      title: "Email Client Opened",
+      description: `Composed email to ${contact.email}`,
+    });
+  };
+
+  const handleCall = (contact: Contact, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (contact.phone) {
+      const telUrl = `tel:${contact.phone}`;
+      window.open(telUrl, '_self');
+      
+      toast({
+        title: "Initiating Call",
+        description: `Calling ${contact.firstName} at ${contact.phone}`,
+      });
+    } else {
+      toast({
+        title: "No Phone Number",
+        description: "This contact doesn't have a phone number on file",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = (contactId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteContactMutation.mutate(contactId);
   };
 
   return (
