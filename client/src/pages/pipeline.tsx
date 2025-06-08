@@ -82,7 +82,7 @@ export default function Pipeline() {
     queryKey: ["/api/deals"],
   });
 
-  const { data: contacts = [] } = useQuery({
+  const { data: contacts = [] } = useQuery<Contact[]>({
     queryKey: ["/api/contacts"],
   });
 
