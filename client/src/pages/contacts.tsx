@@ -6,7 +6,7 @@ import AddContactModal from "@/components/modals/add-contact-modal";
 import AIContactInsights from "@/components/contacts/ai-contact-insights";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Brain, Sparkles } from "lucide-react";
+import { Brain, Sparkles, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Contact } from "@shared/schema";
 
@@ -99,8 +99,17 @@ export default function Contacts() {
                   disabled={isRunningBulkAI}
                   className="bg-purple-600 hover:bg-purple-700"
                 >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  {isRunningBulkAI ? "Analyzing..." : "Run AI Analysis"}
+                  {isRunningBulkAI ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Analyzing All Contacts...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Run AI Analysis
+                    </>
+                  )}
                 </Button>
               </div>
             </CardContent>

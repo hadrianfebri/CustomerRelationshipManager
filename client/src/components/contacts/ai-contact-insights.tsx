@@ -223,12 +223,22 @@ export default function AIContactInsights({ contact, onScoreUpdate }: AIContactI
         <CardContent className="space-y-3">
           <Button 
             onClick={getFollowUpRecommendations}
+            disabled={isGettingRecommendations}
             variant="outline" 
             size="sm"
             className="w-full"
           >
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Get AI Recommendations
+            {isGettingRecommendations ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Getting Recommendations...
+              </>
+            ) : (
+              <>
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Get AI Recommendations
+              </>
+            )}
           </Button>
 
           {followUpRec && (
@@ -255,12 +265,22 @@ export default function AIContactInsights({ contact, onScoreUpdate }: AIContactI
               <div className="pt-2 border-t">
                 <Button 
                   onClick={() => generateEmail("follow-up")}
+                  disabled={isGeneratingEmail}
                   size="sm"
                   variant="outline"
                   className="w-full"
                 >
-                  <Mail className="w-4 h-4 mr-2" />
-                  Generate Follow-up Email
+                  {isGeneratingEmail ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Generating Email...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="w-4 h-4 mr-2" />
+                      Generate Follow-up Email
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
