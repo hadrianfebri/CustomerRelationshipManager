@@ -25,7 +25,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Protected Contacts routes
-  app.get("/api/contacts", isAuthenticated, async (req, res) => {
+  app.get("/api/contacts", async (req, res) => {
     try {
       const { search } = req.query;
       let contacts;

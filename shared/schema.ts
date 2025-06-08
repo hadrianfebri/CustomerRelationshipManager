@@ -76,6 +76,8 @@ export const emailTemplates = pgTable("email_templates", {
 export const insertContactSchema = createInsertSchema(contacts).omit({
   id: true,
   createdAt: true,
+}).extend({
+  organizationId: z.number().default(1),
 });
 
 export const insertActivitySchema = createInsertSchema(activities).omit({
