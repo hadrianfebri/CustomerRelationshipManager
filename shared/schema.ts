@@ -81,6 +81,7 @@ export const aiResults = pgTable("ai_results", {
   resultData: jsonb("result_data").notNull(), // stores the AI analysis/recommendations/email content
   purpose: text("purpose"), // 'follow-up', 'cold-outreach', etc for emails
   contactSnapshot: jsonb("contact_snapshot"), // snapshot of contact data when analysis was done
+  tokensUsed: jsonb("tokens_used"), // { input: number, output: number, total: number }
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [

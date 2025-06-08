@@ -763,13 +763,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/ai/generate-email", async (req, res) => {
     try {
-      const { contactId, purpose, context } = req.body;
+      const { contactId, type = 'follow-up', context } = req.body;
+      
+      if (!contactId) {
+        return res.status(400).json({ message: "Contact ID is required" });
+      }
+
+      // Check for cached result first
+      const cachedResult = await storage.getCachedAiResult(contactId, "email", type);
+      if (cachedResult) {
+        return res.json(cachedResult.resultData);
+      }
+
       const contact = await storage.getContact(contactId);
       if (!contact) {
         return res.status(404).json({ message: "Contact not found" });
       }
       
-      const emailContent = await aiService.generateEmailContent(contact, purpose, context);
+      const emailContent = await aiService.generateEmailContent(contact, type, context);
+
+      // Cache the result
+      await storage.saveAiResult({
+        contactId,
+        resultType: "email",
+        purpose: type,
+        resultData: emailContent,
+        organizationId: 1,
+      });
+
       res.json(emailContent);
     } catch (error) {
       console.error("Email generation error:", error);

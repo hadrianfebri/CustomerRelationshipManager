@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +32,44 @@ export default function AIContactInsights({ contact, onScoreUpdate }: AIContactI
   const [followUpRec, setFollowUpRec] = useState<FollowUpRecommendation | null>(null);
   const [generatedEmail, setGeneratedEmail] = useState<{subject: string; body: string} | null>(null);
   const { toast } = useToast();
+
+  // Load cached AI results when contact changes
+  useEffect(() => {
+    const loadCachedResults = async () => {
+      if (!contact?.id) return;
+
+      try {
+        // Load cached analysis
+        const analysisResponse = await fetch(`/api/ai/lead-score/${contact.id}`, { method: "POST" });
+        if (analysisResponse.ok) {
+          const analysisData = await analysisResponse.json();
+          setInsights(analysisData);
+        }
+
+        // Load cached recommendations
+        const recResponse = await fetch(`/api/ai/follow-up-recommendations/${contact.id}`, { method: "POST" });
+        if (recResponse.ok) {
+          const recData = await recResponse.json();
+          setFollowUpRec(recData);
+        }
+
+        // Load cached email
+        const emailResponse = await fetch('/api/ai/generate-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contactId: contact.id, type: 'follow-up' })
+        });
+        if (emailResponse.ok) {
+          const emailData = await emailResponse.json();
+          setGeneratedEmail(emailData);
+        }
+      } catch (error) {
+        // Silently fail - cached results are optional
+      }
+    };
+
+    loadCachedResults();
+  }, [contact?.id]);
 
   const analyzeContact = async () => {
     setIsAnalyzing(true);
