@@ -1,14 +1,15 @@
 import { 
-  contacts, activities, tasks, deals, emailTemplates, users,
+  contacts, activities, tasks, deals, emailTemplates, users, aiResults,
   type Contact, type InsertContact,
   type Activity, type InsertActivity,
   type Task, type InsertTask,
   type Deal, type InsertDeal,
   type EmailTemplate, type InsertEmailTemplate,
-  type User, type UpsertUser
+  type User, type UpsertUser,
+  type AiResult, type InsertAiResult
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, like, or } from "drizzle-orm";
+import { eq, like, or, and, desc } from "drizzle-orm";
 
 export interface IStorage {
   // Users - Updated for Replit Auth
@@ -48,6 +49,11 @@ export interface IStorage {
   createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate>;
   updateEmailTemplate(id: number, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate | undefined>;
   deleteEmailTemplate(id: number): Promise<boolean>;
+
+  // AI Results Cache
+  getCachedAiResult(contactId: number, resultType: string, purpose?: string): Promise<AiResult | undefined>;
+  saveAiResult(result: InsertAiResult): Promise<AiResult>;
+  invalidateAiResults(contactId: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -704,6 +710,47 @@ export class DatabaseStorage implements IStorage {
 
   async deleteEmailTemplate(id: number): Promise<boolean> {
     const result = await db.delete(emailTemplates).where(eq(emailTemplates.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // AI Results Cache
+  async getCachedAiResult(contactId: number, resultType: string, purpose?: string): Promise<AiResult | undefined> {
+    const conditions = [
+      eq(aiResults.contactId, contactId),
+      eq(aiResults.resultType, resultType)
+    ];
+    
+    if (purpose) {
+      conditions.push(eq(aiResults.purpose, purpose));
+    }
+
+    const [result] = await db
+      .select()
+      .from(aiResults)
+      .where(and(...conditions))
+      .orderBy(desc(aiResults.createdAt))
+      .limit(1);
+    
+    return result || undefined;
+  }
+
+  async saveAiResult(result: InsertAiResult): Promise<AiResult> {
+    const [savedResult] = await db
+      .insert(aiResults)
+      .values({
+        ...result,
+        organizationId: 1, // Default organization for now
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return savedResult;
+  }
+
+  async invalidateAiResults(contactId: number): Promise<boolean> {
+    const result = await db
+      .delete(aiResults)
+      .where(eq(aiResults.contactId, contactId));
     return (result.rowCount ?? 0) > 0;
   }
 }

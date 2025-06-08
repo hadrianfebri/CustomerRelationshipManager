@@ -650,10 +650,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return contacts.length > 0 ? Math.round(totalScore / contacts.length) : 0;
   }
 
-  // AI Automation routes
+  // AI Automation routes with caching
   app.post("/api/ai/lead-score/:contactId", async (req, res) => {
     try {
       const contactId = parseInt(req.params.contactId);
+      
+      // Check for cached result first
+      const cachedResult = await storage.getCachedAiResult(contactId, "analysis");
+      if (cachedResult) {
+        return res.json(JSON.parse(cachedResult.result));
+      }
+
       const contact = await storage.getContact(contactId);
       if (!contact) {
         return res.status(404).json({ message: "Contact not found" });
@@ -664,6 +671,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const analysis = await aiService.calculateAILeadScore(contact, activities, deals);
       
+      // Cache the result
+      await storage.saveAiResult({
+        contactId,
+        resultType: "analysis",
+        result: JSON.stringify(analysis),
+        organizationId: 1,
+      });
+
       // Update contact with new AI-calculated score
       await storage.updateContact(contactId, { leadScore: analysis.score });
       
