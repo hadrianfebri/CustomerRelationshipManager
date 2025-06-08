@@ -72,6 +72,22 @@ export const emailTemplates = pgTable("email_templates", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// AI Results Cache Table
+export const aiResults = pgTable("ai_results", {
+  id: serial("id").primaryKey(),
+  organizationId: integer("organization_id").references(() => organizations.id).notNull(),
+  contactId: integer("contact_id").references(() => contacts.id).notNull(),
+  resultType: text("result_type").notNull(), // 'analysis', 'recommendations', 'email'
+  resultData: jsonb("result_data").notNull(), // stores the AI analysis/recommendations/email content
+  purpose: text("purpose"), // 'follow-up', 'cold-outreach', etc for emails
+  contactSnapshot: jsonb("contact_snapshot"), // snapshot of contact data when analysis was done
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("ai_results_contact_type_idx").on(table.contactId, table.resultType),
+  index("ai_results_purpose_idx").on(table.contactId, table.resultType, table.purpose),
+]);
+
 // Insert schemas
 export const insertContactSchema = createInsertSchema(contacts).omit({
   id: true,
@@ -100,6 +116,12 @@ export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit
   createdAt: true,
 });
 
+export const insertAiResultSchema = createInsertSchema(aiResults).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type Contact = typeof contacts.$inferSelect;
 export type InsertContact = z.infer<typeof insertContactSchema>;
@@ -111,6 +133,8 @@ export type Deal = typeof deals.$inferSelect;
 export type InsertDeal = z.infer<typeof insertDealSchema>;
 export type EmailTemplate = typeof emailTemplates.$inferSelect;
 export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
+export type AiResult = typeof aiResults.$inferSelect;
+export type InsertAiResult = z.infer<typeof insertAiResultSchema>;
 
 // Session storage table for Replit Auth
 export const sessions = pgTable(

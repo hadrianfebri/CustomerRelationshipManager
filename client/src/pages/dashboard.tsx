@@ -58,14 +58,14 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col min-h-0">
       <TopBar 
         title="Dashboard" 
         subtitle="Welcome back, John! Here's what's happening with your sales today."
         onAddClick={() => setIsAddContactOpen(true)}
       />
       
-      <main className="flex-1 overflow-auto p-6 bg-gray-50 dark:bg-background">
+      <main className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-background">
         {/* KPI Cards */}
         <div className="mb-8">
           <KpiCards stats={dashboardStats?.kpis} />
