@@ -658,7 +658,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check for cached result first
       const cachedResult = await storage.getCachedAiResult(contactId, "analysis");
       if (cachedResult) {
-        return res.json(JSON.parse(cachedResult.result));
+        return res.json(cachedResult.resultData);
       }
 
       const contact = await storage.getContact(contactId);
@@ -675,7 +675,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.saveAiResult({
         contactId,
         resultType: "analysis",
-        result: JSON.stringify(analysis),
+        resultData: analysis,
         organizationId: 1,
       });
 
@@ -731,6 +731,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ai/follow-up-recommendations/:contactId", async (req, res) => {
     try {
       const contactId = parseInt(req.params.contactId);
+
+      // Check for cached result first
+      const cachedResult = await storage.getCachedAiResult(contactId, "recommendations");
+      if (cachedResult) {
+        return res.json(cachedResult.resultData);
+      }
+      
       const contact = await storage.getContact(contactId);
       if (!contact) {
         return res.status(404).json({ message: "Contact not found" });
@@ -738,6 +745,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const activities = await storage.getContactActivities(contactId);
       const recommendations = await aiService.generateFollowUpRecommendations(contact, activities);
+
+      // Cache the result
+      await storage.saveAiResult({
+        contactId,
+        resultType: "recommendations",
+        resultData: recommendations,
+        organizationId: 1,
+      });
       
       res.json(recommendations);
     } catch (error) {
