@@ -689,6 +689,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Individual AI lead scoring endpoint
+  app.post("/api/ai/lead-score/:id", async (req, res) => {
+    try {
+      const contactId = parseInt(req.params.id);
+      const contact = await storage.getContact(contactId);
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      
+      const activities = await storage.getContactActivities(contactId);
+      const deals = await storage.getContactDeals(contactId);
+      
+      const analysis = await aiService.calculateAILeadScore(contact, activities, deals);
+      
+      // Update contact with new AI-generated score
+      await storage.updateContact(contactId, { leadScore: analysis.score });
+      
+      res.json(analysis);
+    } catch (error) {
+      console.error("AI lead scoring error:", error);
+      res.status(500).json({ message: "AI lead scoring failed" });
+    }
+  });
+
   app.post("/api/ai/follow-up-recommendations/:contactId", async (req, res) => {
     try {
       const contactId = parseInt(req.params.contactId);
