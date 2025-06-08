@@ -242,7 +242,7 @@ export default function AddDealModal({ open, onOpenChange }: AddDealModalProps) 
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {(contacts || []).map((contact: Contact) => (
+                        {Array.isArray(contacts) && contacts.map((contact: Contact) => (
                           <SelectItem key={contact.id} value={contact.id.toString()}>
                             {contact.firstName} {contact.lastName} - {contact.company}
                           </SelectItem>
