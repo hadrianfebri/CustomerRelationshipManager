@@ -934,7 +934,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/team/invitations', isAuthenticated, async (req: any, res) => {
     try {
       // Mock invitations data for demo
-      const invitations = [];
+      const invitations: any[] = [];
       res.json(invitations);
     } catch (error) {
       console.error('Error fetching invitations:', error);

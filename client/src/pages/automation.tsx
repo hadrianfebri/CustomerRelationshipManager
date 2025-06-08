@@ -112,10 +112,10 @@ export default function AutomationPage() {
   const triggerCampaignMutation = useMutation({
     mutationFn: ({ sequenceId, contactId }: { sequenceId: string; contactId: number }) =>
       apiRequest("POST", `/api/campaigns/trigger/${sequenceId}`, { contactId }),
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: "Campaign Triggered",
-        description: data.message,
+        description: data?.message || "Campaign triggered successfully",
       });
     },
   });
@@ -134,14 +134,14 @@ export default function AutomationPage() {
   }
 
   const sequences: CampaignSequence[] = Array.isArray(campaigns) ? campaigns : [];
-  const churnAnalysis: ChurnAnalysis = churnData?.churnAnalysis || {
+  const churnAnalysis: ChurnAnalysis = (churnData && typeof churnData === 'object' && 'churnAnalysis' in churnData) ? (churnData as any).churnAnalysis : {
     totalContacts: 0,
     atRiskContacts: 0,
     churnRiskPercentage: "0%",
     churnRisks: [],
     winBackOpportunities: []
   };
-  const npsMetrics: NPSData = npsData || {
+  const npsMetrics: NPSData = (npsData && typeof npsData === 'object' && 'npsScore' in npsData) ? npsData as NPSData : {
     npsScore: 0,
     totalResponses: 0,
     breakdown: {

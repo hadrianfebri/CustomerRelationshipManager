@@ -130,7 +130,8 @@ export default function Pipeline() {
   };
 
   const getDealsByStage = (stage: string) => {
-    const enrichedDeals = enrichDealsWithContacts(deals || []);
+    const safeDeals = Array.isArray(deals) ? deals : [];
+    const enrichedDeals = enrichDealsWithContacts(safeDeals);
     return enrichedDeals.filter(deal => deal.stage === stage);
   };
 

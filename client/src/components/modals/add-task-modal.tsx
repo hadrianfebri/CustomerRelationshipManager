@@ -178,7 +178,7 @@ export default function AddTaskModal({ open, onOpenChange }: AddTaskModalProps) 
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">No contact</SelectItem>
-                {contacts?.map((contact: any) => (
+                {Array.isArray(contacts) && contacts.map((contact: any) => (
                   <SelectItem key={contact.id} value={contact.id.toString()}>
                     {contact.firstName} {contact.lastName} - {contact.company}
                   </SelectItem>
