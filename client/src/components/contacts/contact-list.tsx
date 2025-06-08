@@ -22,6 +22,8 @@ interface ContactListProps {
 export default function ContactList({ contacts, isLoading, onContactClick, selectedContactId }: ContactListProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [editContact, setEditContact] = useState<Contact | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const deleteContactMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -93,11 +95,8 @@ export default function ContactList({ contacts, isLoading, onContactClick, selec
 
   const handleEdit = (contact: Contact, e: React.MouseEvent) => {
     e.stopPropagation();
-    toast({
-      title: "Edit Contact",
-      description: `Editing ${contact.firstName} ${contact.lastName}`,
-    });
-    // TODO: Implement edit modal functionality
+    setEditContact(contact);
+    setIsEditModalOpen(true);
   };
 
   const handleSendEmail = (contact: Contact, e: React.MouseEvent) => {
@@ -233,6 +232,12 @@ export default function ContactList({ contacts, isLoading, onContactClick, selec
         </Table>
       </div>
     </div>
+
+    <EditContactModal 
+      contact={editContact}
+      open={isEditModalOpen}
+      onOpenChange={setIsEditModalOpen}
+    />
     </>
   );
 }

@@ -207,24 +207,26 @@ export default function AIContactInsights({ contact, onScoreUpdate }: AIContactI
                 {contact.company} • {contact.position}
               </p>
             </div>
-            <Button 
-              onClick={analyzeContact}
-              disabled={isAnalyzing}
-              size="sm"
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              {isAnalyzing ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  <Brain className="w-4 h-4 mr-2" />
-                  AI Analysis
-                </>
-              )}
-            </Button>
+            {!insights && (
+              <Button 
+                onClick={analyzeContact}
+                disabled={isAnalyzing}
+                size="sm"
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Brain className="w-4 h-4 mr-2" />
+                    AI Analysis
+                  </>
+                )}
+              </Button>
+            )}
           </div>
 
           {insights && (
@@ -259,25 +261,27 @@ export default function AIContactInsights({ contact, onScoreUpdate }: AIContactI
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Button 
-            onClick={getFollowUpRecommendations}
-            disabled={isGettingRecommendations}
-            variant="outline" 
-            size="sm"
-            className="w-full"
-          >
-            {isGettingRecommendations ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Getting Recommendations...
-              </>
-            ) : (
-              <>
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Get AI Recommendations
-              </>
-            )}
-          </Button>
+          {!followUpRec && (
+            <Button 
+              onClick={getFollowUpRecommendations}
+              disabled={isGettingRecommendations}
+              variant="outline" 
+              size="sm"
+              className="w-full"
+            >
+              {isGettingRecommendations ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Getting Recommendations...
+                </>
+              ) : (
+                <>
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Get AI Recommendations
+                </>
+              )}
+            </Button>
+          )}
 
           {followUpRec && (
             <div className="space-y-3 p-3 border rounded-lg">
@@ -300,27 +304,29 @@ export default function AIContactInsights({ contact, onScoreUpdate }: AIContactI
                 ))}
               </div>
 
-              <div className="pt-2 border-t">
-                <Button 
-                  onClick={() => generateEmail("follow-up")}
-                  disabled={isGeneratingEmail}
-                  size="sm"
-                  variant="outline"
-                  className="w-full"
-                >
-                  {isGeneratingEmail ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Generating Email...
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="w-4 h-4 mr-2" />
-                      Generate Follow-up Email
-                    </>
-                  )}
-                </Button>
-              </div>
+              {!generatedEmail && (
+                <div className="pt-2 border-t">
+                  <Button 
+                    onClick={() => generateEmail("follow-up")}
+                    disabled={isGeneratingEmail}
+                    size="sm"
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {isGeneratingEmail ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generating Email...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="w-4 h-4 mr-2" />
+                        Generate Follow-up Email
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
