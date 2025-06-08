@@ -258,7 +258,7 @@ export default function Reports() {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={data.timeSeriesData}>
+                  <BarChart data={safeData.timeSeriesData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
                     <YAxis />
@@ -276,7 +276,7 @@ export default function Reports() {
                 <CardTitle className="text-lg">Sales Cycle</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-center">{data.salesMetrics.salesCycle} days</div>
+                <div className="text-3xl font-bold text-center">{safeData.salesMetrics.salesCycle} days</div>
                 <p className="text-sm text-muted-foreground text-center mt-2">Average time to close</p>
               </CardContent>
             </Card>
@@ -287,10 +287,10 @@ export default function Reports() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-center text-green-600">
-                  {Math.round((data.salesMetrics.dealsWon / (data.salesMetrics.dealsWon + data.salesMetrics.dealsLost)) * 100)}%
+                  {Math.round((safeData.salesMetrics.dealsWon / (safeData.salesMetrics.dealsWon + safeData.salesMetrics.dealsLost)) * 100)}%
                 </div>
                 <p className="text-sm text-muted-foreground text-center mt-2">
-                  {data.salesMetrics.dealsWon} won, {data.salesMetrics.dealsLost} lost
+                  {safeData.salesMetrics.dealsWon} won, {safeData.salesMetrics.dealsLost} lost
                 </p>
               </CardContent>
             </Card>
@@ -300,7 +300,7 @@ export default function Reports() {
                 <CardTitle className="text-lg">Pipeline Value</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-center">${(data.salesMetrics.averageDealSize * 15).toLocaleString()}</div>
+                <div className="text-3xl font-bold text-center">${(safeData.salesMetrics.averageDealSize * 15).toLocaleString()}</div>
                 <p className="text-sm text-muted-foreground text-center mt-2">Active opportunities</p>
               </CardContent>
             </Card>
@@ -317,7 +317,7 @@ export default function Reports() {
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
-                      data={data.leadMetrics.leadSources}
+                      data={safeData.leadMetrics.leadSources}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -326,7 +326,7 @@ export default function Reports() {
                       fill="#8884d8"
                       dataKey="count"
                     >
-                      {data.leadMetrics.leadSources.map((entry, index) => (
+                      {safeData.leadMetrics.leadSources.map((entry: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
