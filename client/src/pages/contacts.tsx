@@ -67,7 +67,7 @@ export default function Contacts() {
   };
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col min-h-0">
       <TopBar 
         title="Contacts" 
         subtitle="Manage your customer relationships and contact information"
@@ -75,7 +75,7 @@ export default function Contacts() {
         onSearch={setSearchQuery}
       />
       
-      <main className="flex-1 overflow-auto p-6 bg-gray-50 dark:bg-background">
+      <main className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-background">
         <div className="mb-6">
           <Card>
             <CardHeader>

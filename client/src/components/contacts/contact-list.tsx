@@ -9,7 +9,7 @@ import { Contact } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import EditContactModal from "@/components/modals/edit-contact-modal";
+
 
 interface ContactListProps {
   contacts?: Contact[];
@@ -21,7 +21,6 @@ interface ContactListProps {
 export default function ContactList({ contacts, isLoading, onContactClick, selectedContactId }: ContactListProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [editContact, setEditContact] = useState<Contact | null>(null);
 
   const deleteContactMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -93,7 +92,11 @@ export default function ContactList({ contacts, isLoading, onContactClick, selec
 
   const handleEdit = (contact: Contact, e: React.MouseEvent) => {
     e.stopPropagation();
-    setEditContact(contact);
+    toast({
+      title: "Edit Contact",
+      description: `Editing ${contact.firstName} ${contact.lastName}`,
+    });
+    // TODO: Implement edit modal functionality
   };
 
   const handleSendEmail = (contact: Contact, e: React.MouseEvent) => {
@@ -229,12 +232,6 @@ export default function ContactList({ contacts, isLoading, onContactClick, selec
         </Table>
       </div>
     </div>
-    
-    <EditContactModal
-      contact={editContact}
-      isOpen={!!editContact}
-      onClose={() => setEditContact(null)}
-    />
     </>
   );
 }
