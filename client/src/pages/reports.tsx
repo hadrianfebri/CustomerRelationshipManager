@@ -119,7 +119,7 @@ export default function Reports() {
     ]
   };
 
-  const data = reportData || mockData;
+  const safeData = reportData || mockData;
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
@@ -174,7 +174,7 @@ export default function Reports() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${data.salesMetrics.totalRevenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">${safeData.salesMetrics.totalRevenue.toLocaleString()}</div>
             <div className="flex items-center text-xs text-green-600">
               <TrendingUp className="w-3 h-3 mr-1" />
               +12.5% from last month
@@ -188,7 +188,7 @@ export default function Reports() {
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.salesMetrics.dealsWon}</div>
+            <div className="text-2xl font-bold">{safeData.salesMetrics.dealsWon}</div>
             <div className="flex items-center text-xs text-green-600">
               <TrendingUp className="w-3 h-3 mr-1" />
               +8.2% from last month
@@ -202,7 +202,7 @@ export default function Reports() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.salesMetrics.conversionRate}%</div>
+            <div className="text-2xl font-bold">{safeData.salesMetrics.conversionRate}%</div>
             <div className="flex items-center text-xs text-red-600">
               <TrendingDown className="w-3 h-3 mr-1" />
               -2.1% from last month
@@ -216,7 +216,7 @@ export default function Reports() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${data.salesMetrics.averageDealSize.toLocaleString()}</div>
+            <div className="text-2xl font-bold">${safeData.salesMetrics.averageDealSize.toLocaleString()}</div>
             <div className="flex items-center text-xs text-green-600">
               <TrendingUp className="w-3 h-3 mr-1" />
               +5.7% from last month
@@ -241,7 +241,7 @@ export default function Reports() {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={data.timeSeriesData}>
+                  <AreaChart data={safeData.timeSeriesData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
                     <YAxis />
