@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Brain, TrendingUp, MessageSquare, Mail, Calendar, AlertCircle } from "lucide-react";
+import { Brain, TrendingUp, MessageSquare, Mail, Calendar, AlertCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Contact } from "@shared/schema";
 
@@ -26,6 +26,8 @@ interface FollowUpRecommendation {
 
 export default function AIContactInsights({ contact, onScoreUpdate }: AIContactInsightsProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isGettingRecommendations, setIsGettingRecommendations] = useState(false);
+  const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
   const [insights, setInsights] = useState<AIInsight | null>(null);
   const [followUpRec, setFollowUpRec] = useState<FollowUpRecommendation | null>(null);
   const [generatedEmail, setGeneratedEmail] = useState<{subject: string; body: string} | null>(null);
@@ -63,6 +65,7 @@ export default function AIContactInsights({ contact, onScoreUpdate }: AIContactI
   };
 
   const getFollowUpRecommendations = async () => {
+    setIsGettingRecommendations(true);
     try {
       const response = await fetch(`/api/ai/follow-up-recommendations/${contact.id}`, {
         method: "POST",
@@ -74,9 +77,11 @@ export default function AIContactInsights({ contact, onScoreUpdate }: AIContactI
         setFollowUpRec(data);
         
         toast({
-          title: "Recommendations Generated",
-          description: "AI follow-up recommendations ready",
+          title: "AI Recommendations Ready",
+          description: "Follow-up recommendations generated successfully",
         });
+      } else {
+        throw new Error("AI service unavailable");
       }
     } catch (error) {
       toast({
@@ -84,10 +89,13 @@ export default function AIContactInsights({ contact, onScoreUpdate }: AIContactI
         description: "AI recommendations temporarily unavailable",
         variant: "destructive",
       });
+    } finally {
+      setIsGettingRecommendations(false);
     }
   };
 
   const generateEmail = async (purpose: string) => {
+    setIsGeneratingEmail(true);
     try {
       const response = await fetch("/api/ai/generate-email", {
         method: "POST",
@@ -107,6 +115,8 @@ export default function AIContactInsights({ contact, onScoreUpdate }: AIContactI
           title: "Email Generated",
           description: "AI-generated email content ready",
         });
+      } else {
+        throw new Error("AI service unavailable");
       }
     } catch (error) {
       toast({
@@ -114,6 +124,8 @@ export default function AIContactInsights({ contact, onScoreUpdate }: AIContactI
         description: "Email generation temporarily unavailable",
         variant: "destructive",
       });
+    } finally {
+      setIsGeneratingEmail(false);
     }
   };
 
@@ -163,7 +175,17 @@ export default function AIContactInsights({ contact, onScoreUpdate }: AIContactI
               size="sm"
               className="bg-purple-600 hover:bg-purple-700"
             >
-              {isAnalyzing ? "Analyzing..." : "AI Analysis"}
+              {isAnalyzing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <Brain className="w-4 h-4 mr-2" />
+                  AI Analysis
+                </>
+              )}
             </Button>
           </div>
 
