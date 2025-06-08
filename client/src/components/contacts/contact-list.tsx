@@ -134,21 +134,22 @@ export default function ContactList({ contacts, isLoading, onContactClick, selec
   };
 
   return (
-    <div className="bg-white dark:bg-card rounded-xl shadow-sm border border-gray-200 dark:border-border">
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Contact</TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead>Lead Status</TableHead>
-              <TableHead>Score</TableHead>
-              <TableHead>Last Contact</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {contacts.map((contact) => (
+    <>
+      <div className="bg-white dark:bg-card rounded-xl shadow-sm border border-gray-200 dark:border-border">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Contact</TableHead>
+                <TableHead>Company</TableHead>
+                <TableHead>Lead Status</TableHead>
+                <TableHead>Score</TableHead>
+                <TableHead>Last Contact</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {contacts.map((contact) => (
               <TableRow 
                 key={contact.id}
                 className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
@@ -200,21 +201,21 @@ export default function ContactList({ contacts, isLoading, onContactClick, selec
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => handleEdit(contact, e)}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => handleSendEmail(contact, e)}>
                         <Mail className="h-4 w-4 mr-2" />
                         Send Email
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => handleCall(contact, e)}>
                         <Phone className="h-4 w-4 mr-2" />
                         Call
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive"
-                        onClick={() => deleteContactMutation.mutate(contact.id)}
+                        onClick={(e) => handleDelete(contact.id, e)}
                       >
                         <Trash className="h-4 w-4 mr-2" />
                         Delete
@@ -228,5 +229,12 @@ export default function ContactList({ contacts, isLoading, onContactClick, selec
         </Table>
       </div>
     </div>
+    
+    <EditContactModal
+      contact={editContact}
+      isOpen={!!editContact}
+      onClose={() => setEditContact(null)}
+    />
+    </>
   );
 }

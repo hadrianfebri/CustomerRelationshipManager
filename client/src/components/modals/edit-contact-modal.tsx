@@ -214,7 +214,7 @@ export default function EditContactModal({ contact, isOpen, onClose }: EditConta
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Lead Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value ?? undefined}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
@@ -240,7 +240,7 @@ export default function EditContactModal({ contact, isOpen, onClose }: EditConta
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Source</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value ?? undefined}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select source" />
@@ -299,6 +299,7 @@ export default function EditContactModal({ contact, isOpen, onClose }: EditConta
                       placeholder="Additional notes about this contact..."
                       className="min-h-[100px]"
                       {...field}
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />
