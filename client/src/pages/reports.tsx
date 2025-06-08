@@ -119,7 +119,7 @@ export default function Reports() {
     ]
   };
 
-  const safeData = reportData || mockData;
+  const safeData = (reportData && typeof reportData === 'object' && 'salesMetrics' in reportData) ? reportData as ReportData : mockData;
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
