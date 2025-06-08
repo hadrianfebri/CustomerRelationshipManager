@@ -518,51 +518,6 @@ export default function AutomationPage() {
     </div>
   );
 }
-                          <Badge variant="destructive" className="text-xs">
-                            2-hour response SLA
-                          </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">Qualified (55-79)</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <div className="text-2xl font-bold text-orange-600">0</div>
-                          <div className="text-xs text-muted-foreground">
-                            SQL conversion opportunity
-                          </div>
-                          <Badge variant="secondary" className="text-xs">
-                            24-hour follow-up
-                          </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">MQL (40-54)</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <div className="text-2xl font-bold text-blue-600">0</div>
-                          <div className="text-xs text-muted-foreground">
-                            Marketing qualified leads
-                          </div>
-                          <Badge variant="outline" className="text-xs">
-                            Nurture sequence
-                          </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h4 className="font-semibold">Automation Rules</h4>
-                    <div className="space-y-3">
                       <div className="flex items-center gap-3 p-3 border rounded-lg">
                         <div className="h-2 w-2 bg-red-500 rounded-full"></div>
                         <div className="flex-1">
