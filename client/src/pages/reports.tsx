@@ -343,20 +343,20 @@ export default function Reports() {
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Total Leads</span>
-                  <Badge variant="outline">{data.leadMetrics.totalLeads}</Badge>
+                  <Badge variant="outline">{safeData.leadMetrics.totalLeads}</Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Qualified Leads</span>
-                  <Badge className="bg-blue-100 text-blue-800">{data.leadMetrics.qualifiedLeads}</Badge>
+                  <Badge className="bg-blue-100 text-blue-800">{safeData.leadMetrics.qualifiedLeads}</Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Hot Leads</span>
-                  <Badge className="bg-red-100 text-red-800">{data.leadMetrics.hotLeads}</Badge>
+                  <Badge className="bg-red-100 text-red-800">{safeData.leadMetrics.hotLeads}</Badge>
                 </div>
                 <div className="mt-4 pt-4 border-t">
                   <div className="text-sm text-muted-foreground">Qualification Rate</div>
                   <div className="text-2xl font-bold">
-                    {Math.round((data.leadMetrics.qualifiedLeads / data.leadMetrics.totalLeads) * 100)}%
+                    {Math.round((safeData.leadMetrics.qualifiedLeads / safeData.leadMetrics.totalLeads) * 100)}%
                   </div>
                 </div>
               </CardContent>
@@ -372,7 +372,7 @@ export default function Reports() {
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data.activityMetrics.totalActivities}</div>
+                <div className="text-2xl font-bold">{safeData.activityMetrics.totalActivities}</div>
               </CardContent>
             </Card>
 
@@ -382,7 +382,7 @@ export default function Reports() {
                 <Mail className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data.activityMetrics.emailsSent}</div>
+                <div className="text-2xl font-bold">{safeData.activityMetrics.emailsSent}</div>
               </CardContent>
             </Card>
 
@@ -392,7 +392,7 @@ export default function Reports() {
                 <Phone className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data.activityMetrics.callsMade}</div>
+                <div className="text-2xl font-bold">{safeData.activityMetrics.callsMade}</div>
               </CardContent>
             </Card>
 
@@ -402,7 +402,7 @@ export default function Reports() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data.activityMetrics.meetingsScheduled}</div>
+                <div className="text-2xl font-bold">{safeData.activityMetrics.meetingsScheduled}</div>
               </CardContent>
             </Card>
           </div>
