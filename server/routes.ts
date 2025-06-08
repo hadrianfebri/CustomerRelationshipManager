@@ -1346,6 +1346,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reports & Analytics API
+  app.get('/api/reports', isAuthenticated, async (req: any, res) => {
+    try {
+      const { dateRange = "30", reportType = "overview" } = req.query;
+      
+      // Get all data for calculations
+      const contacts = await storage.getAllContacts();
+      const activities = await storage.getAllActivities();
+      const deals = await storage.getAllDeals();
+      const tasks = await storage.getAllTasks();
+      
+      // Calculate date range
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - parseInt(dateRange));
+      
+      // Filter data by date range
+      const filteredActivities = activities.filter(activity => 
+        activity.createdAt && new Date(activity.createdAt) >= startDate
+      );
+      const filteredDeals = deals.filter(deal => 
+        deal.createdAt && new Date(deal.createdAt) >= startDate
+      );
+      
+      // Calculate sales metrics
+      const wonDeals = filteredDeals.filter(deal => deal.stage === 'won');
+      const lostDeals = filteredDeals.filter(deal => deal.stage === 'lost');
+      const totalRevenue = wonDeals.reduce((sum, deal) => sum + (parseFloat(deal.value || '0') || 0), 0);
+      const averageDealSize = wonDeals.length > 0 ? totalRevenue / wonDeals.length : 0;
+      const conversionRate = filteredDeals.length > 0 ? (wonDeals.length / filteredDeals.length) * 100 : 0;
+      
+      // Calculate lead metrics
+      const qualifiedLeads = contacts.filter(contact => contact.leadStatus === 'qualified');
+      const hotLeads = contacts.filter(contact => contact.leadScore && contact.leadScore >= 80);
+      
+      // Lead sources analysis
+      const sourceCount: Record<string, number> = {};
+      contacts.forEach(contact => {
+        const source = contact.source || 'Unknown';
+        sourceCount[source] = (sourceCount[source] || 0) + 1;
+      });
+      
+      const leadSources = Object.entries(sourceCount).map(([source, count]) => ({
+        source,
+        count,
+        percentage: parseFloat(((count / contacts.length) * 100).toFixed(1))
+      }));
+      
+      // Activity metrics
+      const emailActivities = filteredActivities.filter(activity => activity.type === 'email');
+      const callActivities = filteredActivities.filter(activity => activity.type === 'call');
+      const meetingActivities = filteredActivities.filter(activity => activity.type === 'meeting');
+      
+      // Time series data (weekly breakdown)
+      const timeSeriesData = [];
+      const weeksInRange = Math.ceil(parseInt(dateRange) / 7);
+      
+      for (let i = 0; i < weeksInRange; i++) {
+        const weekStart = new Date(startDate);
+        weekStart.setDate(startDate.getDate() + (i * 7));
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        
+        const weekDeals = filteredDeals.filter(deal => {
+          const dealDate = new Date(deal.createdAt || '');
+          return dealDate >= weekStart && dealDate <= weekEnd;
+        });
+        
+        const weekContacts = contacts.filter(contact => {
+          const contactDate = new Date(contact.createdAt || '');
+          return contactDate >= weekStart && contactDate <= weekEnd;
+        });
+        
+        const weekRevenue = weekDeals
+          .filter(deal => deal.stage === 'won')
+          .reduce((sum, deal) => sum + (parseFloat(deal.value || '0') || 0), 0);
+        
+        timeSeriesData.push({
+          date: `Week ${i + 1}`,
+          revenue: weekRevenue,
+          leads: weekContacts.length,
+          deals: weekDeals.length
+        });
+      }
+      
+      // Conversion funnel
+      const totalLeads = contacts.length;
+      const opportunityDeals = deals.filter(deal => deal.stage !== 'won' && deal.stage !== 'lost');
+      const proposalDeals = deals.filter(deal => deal.stage === 'proposal');
+      
+      const conversionFunnel = [
+        { stage: "Leads Generated", count: totalLeads, conversionRate: 100 },
+        { stage: "Qualified Leads", count: qualifiedLeads.length, conversionRate: totalLeads > 0 ? (qualifiedLeads.length / totalLeads) * 100 : 0 },
+        { stage: "Opportunities", count: opportunityDeals.length, conversionRate: totalLeads > 0 ? (opportunityDeals.length / totalLeads) * 100 : 0 },
+        { stage: "Proposals Sent", count: proposalDeals.length, conversionRate: totalLeads > 0 ? (proposalDeals.length / totalLeads) * 100 : 0 },
+        { stage: "Deals Won", count: wonDeals.length, conversionRate: totalLeads > 0 ? (wonDeals.length / totalLeads) * 100 : 0 }
+      ];
+      
+      // Calculate sales cycle (average days from creation to close)
+      const closedDeals = filteredDeals.filter(deal => deal.actualCloseDate);
+      const salesCycle = closedDeals.length > 0 ? 
+        closedDeals.reduce((sum, deal) => {
+          const created = new Date(deal.createdAt || '');
+          const closed = new Date(deal.actualCloseDate || '');
+          return sum + Math.floor((closed.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+        }, 0) / closedDeals.length : 0;
+      
+      res.json({
+        salesMetrics: {
+          totalRevenue,
+          dealsWon: wonDeals.length,
+          dealsLost: lostDeals.length,
+          conversionRate: Math.round(conversionRate * 100) / 100,
+          averageDealSize: Math.round(averageDealSize),
+          salesCycle: Math.round(salesCycle)
+        },
+        leadMetrics: {
+          totalLeads: contacts.length,
+          qualifiedLeads: qualifiedLeads.length,
+          hotLeads: hotLeads.length,
+          leadSources
+        },
+        activityMetrics: {
+          totalActivities: filteredActivities.length,
+          emailsSent: emailActivities.length,
+          callsMade: callActivities.length,
+          meetingsScheduled: meetingActivities.length
+        },
+        timeSeriesData,
+        conversionFunnel
+      });
+    } catch (error) {
+      console.error('Reports API error:', error);
+      res.status(500).json({ message: 'Failed to generate reports' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

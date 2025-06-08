@@ -172,12 +172,12 @@ export default function AddTaskModal({ open, onOpenChange }: AddTaskModalProps) 
 
           <div>
             <Label htmlFor="contactId">Related Contact (Optional)</Label>
-            <Select onValueChange={(value) => form.setValue("contactId", value ? parseInt(value) : null)}>
+            <Select onValueChange={(value) => form.setValue("contactId", value === "none" ? null : parseInt(value))}>
               <SelectTrigger>
                 <SelectValue placeholder="Select contact" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No contact</SelectItem>
+                <SelectItem value="none">No contact</SelectItem>
                 {contacts?.map((contact: any) => (
                   <SelectItem key={contact.id} value={contact.id.toString()}>
                     {contact.firstName} {contact.lastName} - {contact.company}
