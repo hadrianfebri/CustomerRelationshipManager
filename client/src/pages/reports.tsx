@@ -413,7 +413,7 @@ export default function Reports() {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={data.timeSeriesData}>
+                <LineChart data={safeData.timeSeriesData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis />
@@ -432,7 +432,7 @@ export default function Reports() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {data.conversionFunnel.map((stage, index) => (
+                {safeData.conversionFunnel.map((stage: any, index: number) => (
                   <div key={stage.stage} className="relative">
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-medium">{stage.stage}</span>

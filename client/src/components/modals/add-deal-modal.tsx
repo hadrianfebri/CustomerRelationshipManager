@@ -183,7 +183,7 @@ export default function AddDealModal({ open, onOpenChange }: AddDealModalProps) 
                         field.onChange(value);
                         form.setValue("probability", getProbabilityByStage(value));
                       }} 
-                      defaultValue={field.value}
+                      defaultValue={field.value ?? ""}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -216,7 +216,8 @@ export default function AddDealModal({ open, onOpenChange }: AddDealModalProps) 
                         type="number" 
                         min="0" 
                         max="100" 
-                        {...field} 
+                        {...field}
+                        value={field.value ?? 0}
                         onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                       />
                     </FormControl>
@@ -308,7 +309,8 @@ export default function AddDealModal({ open, onOpenChange }: AddDealModalProps) 
                   <FormControl>
                     <Textarea 
                       placeholder="Deal notes and additional information..."
-                      {...field} 
+                      {...field}
+                      value={field.value ?? ""}
                     />
                   </FormControl>
                   <FormMessage />
