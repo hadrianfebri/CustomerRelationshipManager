@@ -241,7 +241,7 @@ export default function WhatsApp() {
     broadcastMutation.mutate({
       contactIds: selectedContacts,
       message: broadcastMessage,
-      templateName: selectedTemplate || undefined,
+      templateName: selectedTemplate === "none" ? undefined : selectedTemplate || undefined,
       templateParams: Object.keys(templateParams).length > 0 ? templateParams : undefined
     });
   };
@@ -254,7 +254,13 @@ export default function WhatsApp() {
     );
   };
 
-  const contactsWithPhone = contacts?.filter(contact => contact.phone) || [];
+  const contactsWithPhone = contacts?.filter(contact => 
+    contact.phone && 
+    contact.id && 
+    contact.firstName && 
+    contact.lastName &&
+    typeof contact.id === 'number'
+  ) || [];
 
   return (
     <div className="space-y-6">
@@ -636,7 +642,7 @@ export default function WhatsApp() {
                       <SelectValue placeholder="Pilih template" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Tanpa Template</SelectItem>
+                      <SelectItem value="none">Tanpa Template</SelectItem>
                       {templates?.map((template) => (
                         <SelectItem key={template.id} value={template.name}>
                           {template.name} ({template.category})
