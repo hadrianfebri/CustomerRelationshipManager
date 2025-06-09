@@ -60,7 +60,7 @@ function Router() {
                 <Route path="/automation" component={Automation} />
                 <Route path="/billing" component={Billing} />
                 <Route path="/team" component={Team} />
-                <Route path="/whatsapp" component={WhatsApp} />
+                <Route path="/whatsapp" component={WhatsAppSimple} />
                 <Route component={NotFound} />
               </Switch>
             </div>

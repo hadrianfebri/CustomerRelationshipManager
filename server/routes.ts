@@ -2487,7 +2487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WhatsApp Business API routes (advanced - requires API key)
   app.get('/api/whatsapp/templates', isAuthenticated, async (req, res) => {
     try {
-      const templates = await whatsappService.getMessageTemplates();
+      const templates = await whatsappService.getTemplates();
       res.json(templates);
     } catch (error) {
       console.error('WhatsApp templates error:', error);

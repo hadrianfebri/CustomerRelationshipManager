@@ -335,6 +335,71 @@ Salam hangat! 🛍️`;
     return results;
   }
 
+  // Get available message templates
+  async getTemplates(): Promise<WhatsAppTemplate[]> {
+    // Mock templates for demo - in production these would come from WhatsApp Business API
+    return [
+      {
+        id: 'order_confirmation',
+        name: 'Order Confirmation',
+        category: 'utility',
+        language: 'id',
+        status: 'approved',
+        components: [
+          {
+            type: 'header',
+            format: 'text',
+            text: 'Konfirmasi Pesanan'
+          },
+          {
+            type: 'body',
+            text: 'Terima kasih atas pesanan Anda {{1}}. Detail pesanan: {{2}}'
+          },
+          {
+            type: 'footer',
+            text: 'Hubungi kami jika ada pertanyaan'
+          }
+        ]
+      },
+      {
+        id: 'payment_reminder',
+        name: 'Payment Reminder',
+        category: 'utility',
+        language: 'id',
+        status: 'approved',
+        components: [
+          {
+            type: 'header',
+            format: 'text',
+            text: 'Reminder Pembayaran'
+          },
+          {
+            type: 'body',
+            text: 'Pesanan {{1}} menunggu pembayaran sebesar {{2}}'
+          }
+        ]
+      },
+      {
+        id: 'promotion',
+        name: 'Promotional Message',
+        category: 'marketing',
+        language: 'id',
+        status: 'approved',
+        components: [
+          {
+            type: 'header',
+            format: 'text',
+            text: 'Promo Spesial!'
+          },
+          {
+            type: 'body',
+            text: '{{1}} - Diskon {{2}}% berlaku sampai {{3}}'
+          }
+        ]
+      }
+    ];
+  }
+
   // Clean phone number to international format
   private cleanPhoneNumber(phoneNumber: string): string {
     // Remove all non-digits
