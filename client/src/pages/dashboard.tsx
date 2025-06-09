@@ -18,6 +18,7 @@ export default function Dashboard() {
 
   const { data: dashboardStats, isLoading } = useQuery({
     queryKey: ["/api/dashboard/stats"],
+    refetchInterval: 30000, // Refresh every 30 seconds for realtime updates
   }) as { data?: any; isLoading: boolean };
 
   const handleQuickAction = (action: string) => {

@@ -1868,53 +1868,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // In-memory notification storage for persistent state
+  let notificationStore = [
+    {
+      id: '1',
+      title: 'New Lead Score Update',
+      message: 'Hadrian Febri lead score increased to 131 points',
+      type: 'success',
+      isRead: false,
+      createdAt: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
+      relatedTo: {
+        type: 'contact',
+        id: '3',
+        name: 'Hadrian Febri'
+      }
+    },
+    {
+      id: '2',
+      title: 'Email Campaign Sent',
+      message: 'Bulk email campaign sent to 1 contact successfully',
+      type: 'info',
+      isRead: false,
+      createdAt: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
+      relatedTo: {
+        type: 'email',
+        id: 'campaign_1',
+        name: 'Welcome Campaign'
+      }
+    },
+    {
+      id: '3',
+      title: 'Meeting Scheduled',
+      message: 'Follow-up meeting auto-scheduled with Hadrian Febri',
+      type: 'success',
+      isRead: true,
+      createdAt: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
+      relatedTo: {
+        type: 'meeting',
+        id: 'meeting_1',
+        name: 'Follow-up Call'
+      }
+    }
+  ];
+
   // Notification Management Routes
   app.get('/api/notifications', isAuthenticated, async (req: any, res) => {
     try {
-      // Mock notifications for demo - replace with real database query
-      const notifications = [
-        {
-          id: '1',
-          title: 'New Lead Score Update',
-          message: 'Hadrian Febri lead score increased to 131 points',
-          type: 'success',
-          isRead: false,
-          createdAt: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
-          relatedTo: {
-            type: 'contact',
-            id: '3',
-            name: 'Hadrian Febri'
-          }
-        },
-        {
-          id: '2',
-          title: 'Email Campaign Sent',
-          message: 'Bulk email campaign sent to 1 contact successfully',
-          type: 'info',
-          isRead: false,
-          createdAt: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
-          relatedTo: {
-            type: 'email',
-            id: 'campaign_1',
-            name: 'Welcome Campaign'
-          }
-        },
-        {
-          id: '3',
-          title: 'Meeting Scheduled',
-          message: 'Follow-up meeting auto-scheduled with Hadrian Febri',
-          type: 'success',
-          isRead: true,
-          createdAt: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-          relatedTo: {
-            type: 'meeting',
-            id: 'meeting_1',
-            name: 'Follow-up Call'
-          }
-        }
-      ];
-
-      res.json(notifications);
+      res.json(notificationStore);
     } catch (error) {
       console.error('Error fetching notifications:', error);
       res.status(500).json({ message: 'Failed to fetch notifications' });
@@ -1924,10 +1924,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/notifications/:id/read', isAuthenticated, async (req: any, res) => {
     try {
       const { id } = req.params;
-      // Mock implementation - replace with real database update
-      console.log(`Marking notification ${id} as read`);
       
-      res.json({ success: true, message: 'Notification marked as read' });
+      // Find and update notification
+      const notification = notificationStore.find(n => n.id === id);
+      if (!notification) {
+        return res.status(404).json({ message: 'Notification not found' });
+      }
+      
+      notification.isRead = true;
+      console.log(`Notification ${id} marked as read`);
+      
+      res.json({ success: true, message: 'Notification marked as read', notification });
     } catch (error) {
       console.error('Error marking notification as read:', error);
       res.status(500).json({ message: 'Failed to mark notification as read' });
@@ -1936,13 +1943,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/notifications/mark-all-read', isAuthenticated, async (req: any, res) => {
     try {
-      // Mock implementation - replace with real database update
-      console.log('Marking all notifications as read');
+      // Mark all notifications as read
+      notificationStore.forEach(notification => {
+        notification.isRead = true;
+      });
+      
+      console.log('All notifications marked as read');
       
       res.json({ success: true, message: 'All notifications marked as read' });
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
       res.status(500).json({ message: 'Failed to mark all notifications as read' });
+    }
+  });
+
+  // Add new notification (for testing realtime updates)
+  app.post('/api/notifications', isAuthenticated, async (req: any, res) => {
+    try {
+      const { title, message, type = 'info', relatedTo } = req.body;
+      
+      const newNotification = {
+        id: Date.now().toString(),
+        title,
+        message,
+        type,
+        isRead: false,
+        createdAt: new Date(),
+        relatedTo
+      };
+      
+      notificationStore.unshift(newNotification); // Add to beginning
+      
+      // Keep only last 50 notifications
+      if (notificationStore.length > 50) {
+        notificationStore = notificationStore.slice(0, 50);
+      }
+      
+      res.json({ success: true, notification: newNotification });
+    } catch (error) {
+      console.error('Error creating notification:', error);
+      res.status(500).json({ message: 'Failed to create notification' });
     }
   });
 
