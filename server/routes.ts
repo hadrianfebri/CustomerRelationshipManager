@@ -1053,11 +1053,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // In-memory invitation storage
+  let invitationStore: any[] = [];
+
   app.get('/api/team/invitations', isAuthenticated, async (req: any, res) => {
     try {
-      // Mock invitations data for demo
-      const invitations: any[] = [];
-      res.json(invitations);
+      res.json(invitationStore);
     } catch (error) {
       console.error('Error fetching invitations:', error);
       res.status(500).json({ message: 'Failed to fetch invitations' });
@@ -1072,10 +1073,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Email and role are required' });
       }
 
-      // Mock invitation logic
+      // Create new invitation
+      const newInvitation = {
+        id: Date.now(),
+        email,
+        role,
+        status: 'pending',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        createdAt: new Date()
+      };
+
+      invitationStore.push(newInvitation);
+      
       console.log(`Inviting ${email} as ${role}`);
       
-      res.json({ success: true, message: 'Invitation sent successfully' });
+      res.json({ success: true, message: 'Invitation sent successfully', invitation: newInvitation });
     } catch (error) {
       console.error('Error sending invitation:', error);
       res.status(500).json({ message: 'Failed to send invitation' });

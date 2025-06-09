@@ -156,14 +156,16 @@ export default function Billing() {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Billing & Subscription</h1>
-        <p className="text-gray-600">Manage your subscription and billing information</p>
-      </div>
+    <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-8 max-w-7xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Billing & Subscription</h1>
+            <p className="text-gray-600">Manage your subscription and billing information</p>
+          </div>
 
-      {/* Current Plan Overview */}
-      <div className="grid gap-6 md:grid-cols-3 mb-8">
+          {/* Current Plan Overview */}
+          <div className="grid gap-6 md:grid-cols-3 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Current Plan</CardTitle>
@@ -346,6 +348,8 @@ export default function Billing() {
           )}
         </CardContent>
       </Card>
+        </div>
+      </div>
     </div>
   );
 }
