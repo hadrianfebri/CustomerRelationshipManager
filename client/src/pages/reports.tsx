@@ -321,7 +321,7 @@ export default function Reports() {
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
-                    {chartType === "bar" && (
+                    {chartType === "bar" ? (
                       <BarChart data={safeData.timeSeriesData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="date" />
@@ -329,22 +329,20 @@ export default function Reports() {
                         <Tooltip />
                         <Bar dataKey="revenue" fill="#3B82F6" />
                       </BarChart>
-                    )}
-                    {chartType === "line" && (
+                    ) : chartType === "line" ? (
                       <LineChart data={safeData.timeSeriesData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="date" />
                         <YAxis />
-                        <Tooltip formatter={(value) => [formatCurrency(Number(value)), "Revenue"]} />
+                        <Tooltip />
                         <Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={3} />
                       </LineChart>
-                    )}
-                    {chartType === "area" && (
+                    ) : (
                       <AreaChart data={safeData.timeSeriesData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="date" />
                         <YAxis />
-                        <Tooltip formatter={(value) => [formatCurrency(Number(value)), "Revenue"]} />
+                        <Tooltip />
                         <Area type="monotone" dataKey="revenue" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} />
                       </AreaChart>
                     )}
