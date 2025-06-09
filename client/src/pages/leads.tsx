@@ -28,6 +28,7 @@ export default function Leads() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showBulkDialog, setShowBulkDialog] = useState(false);
   const [bulkAction, setBulkAction] = useState<"email" | "update-status" | "score" | "schedule" | "">("");
+  const [bulkActionData, setBulkActionData] = useState<any>({});
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
@@ -150,24 +151,29 @@ export default function Leads() {
 
   const handleBulkAction = (action: "email" | "update-status" | "score" | "schedule") => {
     setBulkAction(action);
+    setBulkActionData({}); // Reset data
     setShowBulkDialog(true);
   };
 
   const executeBulkAction = () => {
     if (!bulkAction || selectedLeads.length === 0) return;
     
-    let data = {};
-    if (bulkAction === "update-status") {
-      data = { leadStatus: "warm" }; // Default warm status
-    } else if (bulkAction === "score") {
-      data = { leadScore: 10 }; // Add 10 points
+    let data = { ...bulkActionData };
+    
+    // Set defaults if no data provided
+    if (bulkAction === "update-status" && !data.leadStatus) {
+      data.leadStatus = "warm";
+    } else if (bulkAction === "score" && !data.leadScore) {
+      data.leadScore = 10;
     } else if (bulkAction === "email") {
       data = { 
-        customMessage: "Thank you for your interest in our services. We'd love to discuss how we can help your business grow and achieve your goals.",
-        subject: "Following up on your interest"
+        ...data,
+        customMessage: data.customMessage || "Thank you for your interest in our services. We'd love to discuss how we can help your business grow and achieve your goals.",
+        subject: data.subject || "Following up on your interest"
       };
     } else if (bulkAction === "schedule") {
       data = { 
+        ...data,
         taskType: "follow-up",
         priority: "medium"
       };
@@ -670,7 +676,10 @@ export default function Leads() {
               {bulkAction === "update-status" && (
                 <div className="space-y-4">
                   <p>Update lead status for all selected leads</p>
-                  <Select defaultValue="warm">
+                  <Select 
+                    defaultValue="warm" 
+                    onValueChange={(value) => setBulkActionData({...bulkActionData, leadStatus: value})}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select new status" />
                     </SelectTrigger>

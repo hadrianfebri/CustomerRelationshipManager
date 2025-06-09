@@ -1934,9 +1934,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
               break;
             
             case 'schedule':
-              // Meeting scheduling would be handled by calendar service
-              // For now, just mark as processed
-              processed++;
+              const contactForSchedule = await storage.getContact(leadId);
+              if (contactForSchedule) {
+                try {
+                  // Create a follow-up task
+                  await storage.createTask({
+                    title: `Follow-up with ${contactForSchedule.firstName} ${contactForSchedule.lastName}`,
+                    description: `Schedule follow-up meeting or call with ${contactForSchedule.company || 'this lead'}`,
+                    contactId: leadId,
+                    organizationId: contactForSchedule.organizationId,
+                    priority: data.priority || 'medium',
+                    status: 'pending',
+                    assignedTo: req.user.claims.sub,
+                    dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
+                    createdBy: req.user.claims.sub
+                  });
+                  processed++;
+                } catch (error) {
+                  console.error(`Failed to create task for lead ${leadId}:`, error);
+                }
+              }
               break;
             
             default:
