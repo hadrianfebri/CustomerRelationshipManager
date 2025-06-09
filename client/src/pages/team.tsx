@@ -50,11 +50,11 @@ export default function Team() {
 
   const { data: teamMembers, isLoading: membersLoading } = useQuery({
     queryKey: ["/api/team/members"],
-  });
+  }) as { data?: TeamMember[]; isLoading: boolean };
 
   const { data: invitations, isLoading: invitationsLoading } = useQuery({
     queryKey: ["/api/team/invitations"],
-  });
+  }) as { data?: Invitation[]; isLoading: boolean };
 
   const inviteMemberMutation = useMutation({
     mutationFn: async (data: { email: string; role: string }) => {

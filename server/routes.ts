@@ -1035,13 +1035,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Send confirmation email
       try {
-        const { emailService } = require('./email-service');
+        const { emailService } = await import('./email-service.js');
         const user = req.user;
         
         await emailService.sendSingleEmail({
           to: user.claims.email,
           subject: 'Plan Upgrade Confirmation - CRMWIZH',
-          html: `
+          htmlContent: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h2 style="color: #333;">Plan Upgrade Successful</h2>
               <p>Your CRMWIZH subscription has been successfully upgraded to the <strong>${planNames[planId as keyof typeof planNames]}</strong> plan.</p>
@@ -1057,7 +1057,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               <p>Login to your dashboard to start using your new features: <a href="${req.protocol}://${req.hostname}">CRMWIZH Dashboard</a></p>
             </div>
           `,
-          text: `Your CRMWIZH subscription has been upgraded to ${planNames[planId as keyof typeof planNames]} plan. Login to access your new features.`
+          textContent: `Your CRMWIZH subscription has been upgraded to ${planNames[planId as keyof typeof planNames]} plan. Login to access your new features.`
         });
         
         console.log(`Plan upgrade confirmation email sent to ${user.claims.email}`);
@@ -1149,12 +1149,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const inviteLink = `${req.protocol}://${req.hostname}/join-team?token=${newInvitation.id}&email=${encodeURIComponent(email)}`;
         
         // Import email service for sending invitations
-        const { emailService } = require('./email-service');
+        const { emailService } = await import('./email-service.js');
         
         await emailService.sendSingleEmail({
           to: email,
           subject: 'You\'re invited to join CRMWIZH team',
-          html: `
+          htmlContent: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h2 style="color: #333;">Team Invitation</h2>
               <p>You've been invited to join the CRMWIZH team as a <strong>${role}</strong>.</p>
@@ -1167,7 +1167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               <p style="color: #999; font-size: 12px;">If you didn't expect this invitation, you can safely ignore this email.</p>
             </div>
           `,
-          text: `You've been invited to join the CRMWIZH team as a ${role}. Visit this link to accept: ${inviteLink}`
+          textContent: `You've been invited to join the CRMWIZH team as a ${role}. Visit this link to accept: ${inviteLink}`
         });
         
         console.log(`Invitation email sent to ${email}`);
