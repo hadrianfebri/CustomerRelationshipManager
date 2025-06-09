@@ -18,7 +18,7 @@ import Automation from "@/pages/automation";
 import Landing from "@/pages/landing";
 import JoinTeam from "@/pages/join-team";
 import Login from "@/pages/login";
-import WhatsApp from "@/pages/whatsapp";
+import WhatsAppSimple from "@/pages/whatsapp-simple";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {

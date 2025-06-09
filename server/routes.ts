@@ -8,6 +8,7 @@ import { CampaignAutomation } from "./campaign-automation";
 import { emailService } from "./email-service";
 import { calendarService } from "./calendar-service";
 import { whatsappService } from "./whatsapp-service";
+import { simpleWhatsAppService } from "./whatsapp-simple";
 import { insertContactSchema, insertActivitySchema, insertTaskSchema, insertDealSchema, insertEmailTemplateSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -2347,7 +2348,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // WhatsApp Business API routes
+  // Simple WhatsApp routes (no API key needed - uses wa.me links)
+  app.get('/api/whatsapp/simple/templates', isAuthenticated, async (req, res) => {
+    try {
+      const templates = simpleWhatsAppService.getTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error('Simple WhatsApp templates error:', error);
+      res.status(500).json({ message: 'Failed to get templates' });
+    }
+  });
+
+  app.post('/api/whatsapp/simple/generate-link', isAuthenticated, async (req, res) => {
+    try {
+      const { contactId, templateId, variables } = req.body;
+      
+      const contact = await storage.getContact(contactId);
+      if (!contact) {
+        return res.status(404).json({ message: 'Contact not found' });
+      }
+
+      if (!contact.phone) {
+        return res.status(400).json({ message: 'Contact has no phone number' });
+      }
+
+      let result;
+      
+      if (templateId === 'order_confirm_simple') {
+        result = simpleWhatsAppService.generateOrderConfirmation(contact, variables);
+      } else if (templateId === 'payment_reminder_simple') {
+        result = simpleWhatsAppService.generatePaymentReminder(contact, variables);
+      } else if (templateId === 'followup_simple') {
+        result = simpleWhatsAppService.generateFollowUp(contact, variables.reviewLink);
+      } else if (templateId === 'promo_broadcast') {
+        result = simpleWhatsAppService.generatePromoBroadcast(contact, variables);
+      } else {
+        return res.status(400).json({ message: 'Invalid template ID' });
+      }
+
+      // Log activity
+      await storage.createActivity({
+        contactId: contact.id,
+        type: 'whatsapp',
+        title: 'WhatsApp Link Generated',
+        description: `wa.me link created for ${templateId}`,
+        organizationId: contact.organizationId,
+      });
+
+      res.json({ 
+        success: true, 
+        waLink: result.waLink,
+        message: result.message,
+        instruction: 'Klik link wa.me untuk buka WhatsApp dan kirim pesan'
+      });
+    } catch (error) {
+      console.error('Simple WhatsApp link generation error:', error);
+      res.status(500).json({ message: 'Failed to generate WhatsApp link' });
+    }
+  });
+
+  app.post('/api/whatsapp/simple/bulk-links', isAuthenticated, async (req, res) => {
+    try {
+      const { contactIds, message, templateId, variables } = req.body;
+      
+      if (!contactIds || contactIds.length === 0) {
+        return res.status(400).json({ message: 'No contacts selected' });
+      }
+
+      const contacts = await Promise.all(
+        contactIds.map((id: number) => storage.getContact(id))
+      );
+
+      const validContacts = contacts.filter(contact => 
+        contact && contact.phone
+      );
+
+      let links;
+      if (templateId && variables) {
+        // Generate from template
+        links = validContacts.map(contact => {
+          let result;
+          if (templateId === 'promo_broadcast') {
+            result = simpleWhatsAppService.generatePromoBroadcast(contact, variables);
+          } else if (templateId === 'followup_simple') {
+            result = simpleWhatsAppService.generateFollowUp(contact, variables.reviewLink);
+          } else {
+            // Custom message
+            const waLink = simpleWhatsAppService.generateWhatsAppLink(contact.phone!, message);
+            result = { waLink, message };
+          }
+          
+          return {
+            contactId: contact.id,
+            name: `${contact.firstName} ${contact.lastName}`,
+            phone: contact.phone,
+            waLink: result.waLink,
+            message: result.message
+          };
+        });
+      } else {
+        // Simple message broadcast
+        links = simpleWhatsAppService.generateBulkWhatsAppLinks(validContacts, message);
+      }
+
+      // Log activities
+      for (const contact of validContacts) {
+        await storage.createActivity({
+          contactId: contact.id,
+          type: 'whatsapp',
+          title: 'Bulk WhatsApp Link',
+          description: `Bulk wa.me link generated: ${message.substring(0, 50)}...`,
+          organizationId: contact.organizationId,
+        });
+      }
+
+      res.json({ 
+        success: true, 
+        links,
+        instruction: 'Buka setiap link wa.me untuk kirim pesan ke customer',
+        totalLinks: links.length
+      });
+    } catch (error) {
+      console.error('Bulk WhatsApp links error:', error);
+      res.status(500).json({ message: 'Failed to generate bulk links' });
+    }
+  });
+
+  app.get('/api/whatsapp/simple/instructions', isAuthenticated, async (req, res) => {
+    try {
+      const instructions = simpleWhatsAppService.getUsageInstructions();
+      res.json({ instructions });
+    } catch (error) {
+      console.error('WhatsApp instructions error:', error);
+      res.status(500).json({ message: 'Failed to get instructions' });
+    }
+  });
+
+  // WhatsApp Business API routes (advanced - requires API key)
+  app.get('/api/whatsapp/templates', isAuthenticated, async (req, res) => {
+    try {
+      const templates = await whatsappService.getMessageTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error('WhatsApp templates error:', error);
+      res.status(500).json({ message: 'Failed to get WhatsApp templates' });
+    }
+  });
+
   app.post('/api/whatsapp/send-message', isAuthenticated, async (req, res) => {
     try {
       const { contactId, message, type = 'text', templateName, templateParams } = req.body;
