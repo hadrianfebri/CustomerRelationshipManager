@@ -263,7 +263,7 @@ export default function WhatsAppSimple() {
   ) || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 overflow-auto h-full">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -287,15 +287,15 @@ export default function WhatsAppSimple() {
         </AlertDescription>
       </Alert>
 
-      <Tabs defaultValue="quick-messages" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="quick-messages" className="w-full flex flex-col h-full">
+        <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
           <TabsTrigger value="quick-messages">Pesan Cepat</TabsTrigger>
           <TabsTrigger value="broadcast">Broadcast</TabsTrigger>
           <TabsTrigger value="templates">Template</TabsTrigger>
         </TabsList>
 
         {/* Quick Messages */}
-        <TabsContent value="quick-messages" className="space-y-6">
+        <TabsContent value="quick-messages" className="space-y-6 flex-1 overflow-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             {/* Order Confirmation */}
@@ -487,7 +487,7 @@ export default function WhatsAppSimple() {
         </TabsContent>
 
         {/* Broadcast */}
-        <TabsContent value="broadcast" className="space-y-6">
+        <TabsContent value="broadcast" className="space-y-6 flex-1 overflow-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             {/* Contact Selection */}
@@ -499,7 +499,7 @@ export default function WhatsAppSimple() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2 max-h-80 overflow-y-auto">
+                <div className="space-y-2 max-h-64 overflow-y-auto border rounded-md p-2">
                   {contactsWithPhone.map((contact) => (
                     <div
                       key={contact.id}
@@ -626,7 +626,7 @@ export default function WhatsAppSimple() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
+                <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-2">
                   {generatedLinks.map((link, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-md">
                       <div>

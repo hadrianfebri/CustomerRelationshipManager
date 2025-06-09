@@ -2457,7 +2457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           contactId: contact.id,
           type: 'whatsapp',
           title: 'Bulk WhatsApp Link',
-          description: `Bulk wa.me link generated: ${message.substring(0, 50)}...`,
+          description: `Bulk wa.me link generated: ${message ? message.substring(0, 50) : 'template message'}...`,
           organizationId: contact.organizationId,
         });
       }
