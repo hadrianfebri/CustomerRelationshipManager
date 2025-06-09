@@ -1181,8 +1181,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Team management routes
   app.get('/api/team/members', isAuthenticated, async (req: any, res) => {
     try {
-      // Mock team members data for demo
-      const teamMembers = [
+      // Get all team members including the authenticated user and invited members
+      const allMembers = [
+        // Current authenticated user (admin/owner)
         {
           id: req.user.claims.sub,
           firstName: req.user.claims.first_name || 'John',
@@ -1192,18 +1193,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           organizationRole: 'owner',
           isActive: true,
           lastLoginAt: new Date()
-        }
+        },
+        // Add all team members from teamStore
+        ...teamStore.map(member => ({
+          id: member.id,
+          firstName: member.firstName,
+          lastName: member.lastName,
+          email: member.email,
+          role: member.role,
+          organizationRole: member.organizationRole,
+          isActive: member.isActive,
+          lastLoginAt: member.joinedAt
+        }))
       ];
 
-      res.json(teamMembers);
+      res.json(allMembers);
     } catch (error) {
       console.error('Error fetching team members:', error);
       res.status(500).json({ message: 'Failed to fetch team members' });
     }
   });
-
-  // In-memory invitation storage
-  let invitationStore: any[] = [];
 
   app.get('/api/team/invitations', isAuthenticated, async (req: any, res) => {
     try {
@@ -1320,6 +1329,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       teamStore.push(newMember);
       
       console.log(`New team member joined: ${email} as ${invitation.role}`);
+      console.log('Current teamStore:', teamStore.map(m => ({ email: m.email, role: m.organizationRole })));
       
       res.json({ 
         success: true, 
