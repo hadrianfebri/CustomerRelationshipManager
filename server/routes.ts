@@ -1007,10 +1007,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { planId } = req.body;
       
-      // Mock plan change logic
       console.log(`Changing plan to: ${planId}`);
       
-      res.json({ success: true, message: 'Plan changed successfully' });
+      // Plan names mapping
+      const planNames = {
+        'free': 'Starter',
+        'pro': 'Professional', 
+        'enterprise': 'Enterprise'
+      };
+      
+      // Add notification for plan change
+      const newNotification = {
+        id: Date.now().toString(),
+        title: 'Plan Updated Successfully',
+        message: `Your subscription has been upgraded to ${planNames[planId as keyof typeof planNames]} plan`,
+        type: 'success',
+        isRead: false,
+        createdAt: new Date(),
+        relatedTo: {
+          type: 'billing',
+          id: planId,
+          name: `${planNames[planId as keyof typeof planNames]} Plan`
+        }
+      };
+      
+      notificationStore.unshift(newNotification);
+      
+      // Send confirmation email
+      try {
+        const { emailService } = require('./email-service');
+        const user = req.user;
+        
+        await emailService.sendSingleEmail({
+          to: user.claims.email,
+          subject: 'Plan Upgrade Confirmation - CRMWIZH',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #333;">Plan Upgrade Successful</h2>
+              <p>Your CRMWIZH subscription has been successfully upgraded to the <strong>${planNames[planId as keyof typeof planNames]}</strong> plan.</p>
+              <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+                <h3 style="margin-top: 0;">What's Next?</h3>
+                <ul>
+                  <li>Access to advanced AI automation features</li>
+                  <li>Increased contact and team member limits</li>
+                  <li>Priority customer support</li>
+                  <li>Advanced analytics and reporting</li>
+                </ul>
+              </div>
+              <p>Login to your dashboard to start using your new features: <a href="${req.protocol}://${req.hostname}">CRMWIZH Dashboard</a></p>
+            </div>
+          `,
+          text: `Your CRMWIZH subscription has been upgraded to ${planNames[planId as keyof typeof planNames]} plan. Login to access your new features.`
+        });
+        
+        console.log(`Plan upgrade confirmation email sent to ${user.claims.email}`);
+      } catch (emailError) {
+        console.error('Failed to send upgrade confirmation email:', emailError);
+      }
+      
+      res.json({ 
+        success: true, 
+        message: 'Plan changed successfully',
+        notification: newNotification
+      });
     } catch (error) {
       console.error('Error changing plan:', error);
       res.status(500).json({ message: 'Failed to change plan' });
@@ -1085,12 +1144,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       invitationStore.push(newInvitation);
       
-      console.log(`Inviting ${email} as ${role}`);
+      // Send invitation email
+      try {
+        const inviteLink = `${req.protocol}://${req.hostname}/join-team?token=${newInvitation.id}&email=${encodeURIComponent(email)}`;
+        
+        // Import email service for sending invitations
+        const { emailService } = require('./email-service');
+        
+        await emailService.sendSingleEmail({
+          to: email,
+          subject: 'You\'re invited to join CRMWIZH team',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #333;">Team Invitation</h2>
+              <p>You've been invited to join the CRMWIZH team as a <strong>${role}</strong>.</p>
+              <p>Click the button below to accept the invitation and set up your account:</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${inviteLink}" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Accept Invitation</a>
+              </div>
+              <p style="color: #666; font-size: 14px;">This invitation will expire in 7 days.</p>
+              <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+              <p style="color: #999; font-size: 12px;">If you didn't expect this invitation, you can safely ignore this email.</p>
+            </div>
+          `,
+          text: `You've been invited to join the CRMWIZH team as a ${role}. Visit this link to accept: ${inviteLink}`
+        });
+        
+        console.log(`Invitation email sent to ${email}`);
+      } catch (emailError) {
+        console.error('Failed to send invitation email:', emailError);
+      }
       
       res.json({ success: true, message: 'Invitation sent successfully', invitation: newInvitation });
     } catch (error) {
       console.error('Error sending invitation:', error);
       res.status(500).json({ message: 'Failed to send invitation' });
+    }
+  });
+
+  // Accept team invitation endpoint
+  app.post('/api/team/accept-invitation', async (req, res) => {
+    try {
+      const { token, email, password, firstName, lastName } = req.body;
+      
+      if (!token || !email || !password || !firstName) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+      
+      // Find invitation
+      const invitation = invitationStore.find(inv => 
+        inv.id.toString() === token.toString() && 
+        inv.email === email && 
+        inv.status === 'pending'
+      );
+      
+      if (!invitation) {
+        return res.status(404).json({ message: 'Invalid or expired invitation' });
+      }
+      
+      // Check if invitation has expired
+      if (new Date() > invitation.expiresAt) {
+        return res.status(400).json({ message: 'Invitation has expired' });
+      }
+      
+      // Update invitation status
+      invitation.status = 'accepted';
+      invitation.acceptedAt = new Date();
+      
+      // Create new team member account (mock implementation)
+      const newMember = {
+        id: Date.now().toString(),
+        firstName,
+        lastName,
+        email,
+        role: 'user',
+        organizationRole: invitation.role,
+        isActive: true,
+        joinedAt: new Date(),
+        invitationId: invitation.id
+      };
+      
+      console.log(`New team member joined: ${email} as ${invitation.role}`);
+      
+      res.json({ 
+        success: true, 
+        message: 'Invitation accepted successfully',
+        member: newMember,
+        redirectTo: '/login'
+      });
+    } catch (error) {
+      console.error('Error accepting invitation:', error);
+      res.status(500).json({ message: 'Failed to accept invitation' });
     }
   });
 

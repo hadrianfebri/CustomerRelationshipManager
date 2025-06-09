@@ -16,6 +16,7 @@ import Billing from "@/pages/billing";
 import Team from "@/pages/team";
 import Automation from "@/pages/automation";
 import Landing from "@/pages/landing";
+import JoinTeam from "@/pages/join-team";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {
@@ -32,29 +33,37 @@ function Router() {
     );
   }
 
-  if (!isAuthenticated) {
-    return <Landing />;
-  }
-
   return (
-    <div className="flex h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Switch>
-          <Route path="/" component={Dashboard} />
-          <Route path="/contacts" component={Contacts} />
-          <Route path="/leads" component={Leads} />
-          <Route path="/pipeline" component={Pipeline} />
-          <Route path="/tasks" component={Tasks} />
-          <Route path="/reports" component={Reports} />
-          <Route path="/email-templates" component={EmailTemplates} />
-          <Route path="/automation" component={Automation} />
-          <Route path="/billing" component={Billing} />
-          <Route path="/team" component={Team} />
-          <Route component={NotFound} />
-        </Switch>
-      </div>
-    </div>
+    <Switch>
+      {/* Public routes for non-authenticated users */}
+      <Route path="/join-team" component={JoinTeam} />
+      
+      {/* Protected routes */}
+      {!isAuthenticated ? (
+        <Route path="*" component={Landing} />
+      ) : (
+        <Route path="*">
+          <div className="flex h-screen">
+            <Sidebar />
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <Switch>
+                <Route path="/" component={Dashboard} />
+                <Route path="/contacts" component={Contacts} />
+                <Route path="/leads" component={Leads} />
+                <Route path="/pipeline" component={Pipeline} />
+                <Route path="/tasks" component={Tasks} />
+                <Route path="/reports" component={Reports} />
+                <Route path="/email-templates" component={EmailTemplates} />
+                <Route path="/automation" component={Automation} />
+                <Route path="/billing" component={Billing} />
+                <Route path="/team" component={Team} />
+                <Route component={NotFound} />
+              </Switch>
+            </div>
+          </div>
+        </Route>
+      )}
+    </Switch>
   );
 }
 
