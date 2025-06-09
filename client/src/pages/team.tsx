@@ -207,6 +207,65 @@ export default function Team() {
         </CardContent>
       </Card>
 
+      {/* Pending Invitations */}
+      {invitations && invitations.length > 0 && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5" />
+              Pending Invitations ({invitations.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {invitations.map((invitation: Invitation) => (
+                <div key={invitation.id} className="flex items-center justify-between p-4 border rounded-lg bg-yellow-50 border-yellow-200">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                      <Mail className="w-5 h-5 text-yellow-600" />
+                    </div>
+                    <div>
+                      <div className="font-medium">{invitation.email}</div>
+                      <div className="text-sm text-gray-500">
+                        Role: {invitation.role} • Invited {new Date(invitation.createdAt).toLocaleDateString()}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        Expires: {new Date(invitation.expiresAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline" className="text-yellow-700 border-yellow-300">
+                      {invitation.status}
+                    </Badge>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          onClick={() => resendInvitationMutation.mutate(invitation.id)}
+                          disabled={resendInvitationMutation.isPending}
+                        >
+                          <Mail className="w-4 h-4 mr-2" />
+                          Resend Invitation
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(`${window.location.origin}/join-team?token=${invitation.id}&email=${encodeURIComponent(invitation.email)}`)}>
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy Invite Link
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Current Team Members */}
       <Card className="mb-8">
         <CardHeader>
