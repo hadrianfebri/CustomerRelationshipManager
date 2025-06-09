@@ -95,15 +95,26 @@ export default function WhatsAppSimple() {
       return await apiRequest("POST", "/api/whatsapp/simple/generate-link", data);
     },
     onSuccess: (response: any) => {
-      // Open WhatsApp link in new tab
-      window.open(response.waLink, '_blank');
+      console.log('Single link response:', response);
       
-      toast({
-        title: "Link WhatsApp Dibuat",
-        description: "Link wa.me telah dibuka di tab baru",
-      });
+      if (response?.waLink) {
+        // Open WhatsApp link in new tab
+        window.open(response.waLink, '_blank');
+        
+        toast({
+          title: "Link WhatsApp Dibuat",
+          description: "Link wa.me telah dibuka di tab baru",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Link WhatsApp tidak dapat dibuat",
+          variant: "destructive",
+        });
+      }
     },
     onError: (error: any) => {
+      console.error('Single link error:', error);
       toast({
         title: "Gagal Membuat Link",
         description: error.message || "Gagal membuat link WhatsApp",
@@ -117,13 +128,16 @@ export default function WhatsAppSimple() {
       return await apiRequest("POST", "/api/whatsapp/simple/bulk-links", data);
     },
     onSuccess: (response: any) => {
-      setGeneratedLinks(response.links);
+      console.log('Bulk links response:', response);
+      const links = response?.links || [];
+      setGeneratedLinks(links);
       toast({
         title: "Bulk Links Dibuat",
-        description: `${response.totalLinks} link wa.me berhasil dibuat`,
+        description: `${links.length} link wa.me berhasil dibuat`,
       });
     },
     onError: (error: any) => {
+      console.error('Bulk links error:', error);
       toast({
         title: "Gagal Membuat Bulk Links",
         description: error.message || "Gagal membuat bulk links",
@@ -611,7 +625,7 @@ export default function WhatsAppSimple() {
           </div>
 
           {/* Generated Links */}
-          {generatedLinks.length > 0 && (
+          {generatedLinks && generatedLinks.length > 0 && (
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -628,22 +642,27 @@ export default function WhatsAppSimple() {
               <CardContent>
                 <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-2">
                   {generatedLinks.map((link, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-md">
-                      <div>
+                    <div key={index} className="flex items-center justify-between p-3 border rounded-md bg-gray-50 dark:bg-gray-800">
+                      <div className="flex-1">
                         <p className="font-medium">{link.name}</p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">{link.phone}</p>
+                        <p className="text-xs text-blue-600 dark:text-blue-400 truncate">
+                          {link.waLink ? link.waLink.substring(0, 50) + '...' : 'No link generated'}
+                        </p>
                       </div>
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-2 ml-4">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => copyLink(link.waLink)}
+                          disabled={!link.waLink}
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
                         <Button
                           size="sm"
                           onClick={() => window.open(link.waLink, '_blank')}
+                          disabled={!link.waLink}
                         >
                           <ExternalLink className="h-4 w-4" />
                         </Button>
