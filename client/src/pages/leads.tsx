@@ -217,48 +217,132 @@ export default function Leads() {
           </TabsList>
 
           <TabsContent value="leads" className="space-y-6">
-            {/* Filters */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Filter className="h-5 w-5 mr-2" />
-                  Filters
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex space-x-4">
+            {/* Filters and Bulk Actions */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Filter className="h-5 w-5 mr-2" />
+                    Filters & Search
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Search */}
                   <div>
-                    <label className="text-sm font-medium">Status</label>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="hot">Hot</SelectItem>
-                        <SelectItem value="warm">Warm</SelectItem>
-                        <SelectItem value="cold">Cold</SelectItem>
-                        <SelectItem value="new">New</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <label className="text-sm font-medium">Search Leads</label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Search by name, email, or company..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium">Minimum Score</label>
-                    <Select value={scoreFilter} onValueChange={setScoreFilter}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Scores</SelectItem>
-                        <SelectItem value="80">80+ (Hot)</SelectItem>
-                        <SelectItem value="50">50+ (Warm+)</SelectItem>
-                        <SelectItem value="20">20+ (Cold+)</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium">Status</label>
+                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Status</SelectItem>
+                          <SelectItem value="hot">Hot</SelectItem>
+                          <SelectItem value="warm">Warm</SelectItem>
+                          <SelectItem value="cold">Cold</SelectItem>
+                          <SelectItem value="new">New</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Minimum Score</label>
+                      <Select value={scoreFilter} onValueChange={setScoreFilter}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Scores</SelectItem>
+                          <SelectItem value="80">80+ (Hot)</SelectItem>
+                          <SelectItem value="50">50+ (Warm+)</SelectItem>
+                          <SelectItem value="20">20+ (Cold+)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+
+              {/* Bulk Actions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <CheckSquare className="h-5 w-5 mr-2" />
+                    Bulk Actions
+                    {selectedLeads.length > 0 && (
+                      <Badge className="ml-2">{selectedLeads.length} selected</Badge>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleBulkAction("email")}
+                        disabled={selectedLeads.length === 0}
+                      >
+                        <Mail className="w-4 h-4 mr-1" />
+                        Send Email
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleBulkAction("update-status")}
+                        disabled={selectedLeads.length === 0}
+                      >
+                        <Target className="w-4 h-4 mr-1" />
+                        Update Status
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleBulkAction("score")}
+                        disabled={selectedLeads.length === 0}
+                      >
+                        <TrendingUp className="w-4 h-4 mr-1" />
+                        Boost Score
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleBulkAction("schedule")}
+                        disabled={selectedLeads.length === 0}
+                      >
+                        <Calendar className="w-4 h-4 mr-1" />
+                        Schedule
+                      </Button>
+                    </div>
+                    
+                    <div className="flex justify-between items-center text-sm text-gray-500">
+                      <span>Select leads to perform bulk actions</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => leadScoringMutation.mutate()}
+                        disabled={leadScoringMutation.isPending}
+                      >
+                        <Zap className="w-4 h-4 mr-1" />
+                        {leadScoringMutation.isPending ? "Scoring..." : "AI Score All"}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Leads Table */}
             <div className="bg-white dark:bg-card rounded-xl shadow-sm border border-gray-200 dark:border-border">
@@ -283,18 +367,54 @@ export default function Leads() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Lead</TableHead>
+                        <TableHead className="w-12">
+                          <Checkbox
+                            checked={selectedLeads.length === leads?.length && leads.length > 0}
+                            onCheckedChange={toggleSelectAll}
+                          />
+                        </TableHead>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                          onClick={() => handleSort("name")}
+                        >
+                          <div className="flex items-center">
+                            Lead
+                            <ArrowUpDown className="ml-1 h-4 w-4" />
+                          </div>
+                        </TableHead>
                         <TableHead>Company</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Score</TableHead>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                          onClick={() => handleSort("score")}
+                        >
+                          <div className="flex items-center">
+                            Score
+                            <ArrowUpDown className="ml-1 h-4 w-4" />
+                          </div>
+                        </TableHead>
                         <TableHead>Source</TableHead>
-                        <TableHead>Last Contact</TableHead>
+                        <TableHead 
+                          className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                          onClick={() => handleSort("date")}
+                        >
+                          <div className="flex items-center">
+                            Last Contact
+                            <ArrowUpDown className="ml-1 h-4 w-4" />
+                          </div>
+                        </TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {leads.map((lead: Contact) => (
-                        <TableRow key={lead.id}>
+                        <TableRow key={lead.id} className={selectedLeads.includes(lead.id) ? "bg-blue-50 dark:bg-blue-950/20" : ""}>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedLeads.includes(lead.id)}
+                              onCheckedChange={() => toggleLeadSelection(lead.id)}
+                            />
+                          </TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-3">
                               <Avatar className="w-10 h-10">
@@ -354,17 +474,51 @@ export default function Leads() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit Lead
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedContact(lead);
+                                    setEmailModalOpen(true);
+                                  }}
+                                >
                                   <Mail className="h-4 w-4 mr-2" />
                                   Send Email
                                 </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedContact(lead);
+                                    setMeetingModalOpen(true);
+                                  }}
+                                >
+                                  <Calendar className="h-4 w-4 mr-2" />
+                                  Schedule Meeting
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => updateLeadScoreMutation.mutate({ 
+                                    id: lead.id, 
+                                    leadStatus: "hot" 
+                                  })}
+                                >
+                                  <Target className="h-4 w-4 mr-2" />
+                                  Mark as Hot
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => updateLeadScoreMutation.mutate({ 
+                                    id: lead.id, 
+                                    leadScore: Math.min((lead.leadScore || 0) + 10, 100) 
+                                  })}
+                                >
+                                  <TrendingUp className="h-4 w-4 mr-2" />
+                                  Boost Score (+10)
+                                </DropdownMenuItem>
                                 <DropdownMenuItem>
                                   <Phone className="h-4 w-4 mr-2" />
-                                  Call
+                                  Call Lead
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit Details
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -480,6 +634,117 @@ export default function Leads() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Bulk Action Dialog */}
+        <Dialog open={showBulkDialog} onOpenChange={setShowBulkDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Bulk Action: {bulkAction}</DialogTitle>
+              <DialogDescription>
+                Apply action to {selectedLeads.length} selected leads
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="py-4">
+              {bulkAction === "email" && (
+                <div className="space-y-4">
+                  <p>Send bulk email campaign to selected leads</p>
+                  <Button
+                    onClick={() => {
+                      setShowBulkDialog(false);
+                      setEmailModalOpen(true);
+                    }}
+                    className="w-full"
+                  >
+                    Open Email Composer
+                  </Button>
+                </div>
+              )}
+              
+              {bulkAction === "update-status" && (
+                <div className="space-y-4">
+                  <p>Update lead status for all selected leads</p>
+                  <Select defaultValue="warm">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select new status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="hot">Hot</SelectItem>
+                      <SelectItem value="warm">Warm</SelectItem>
+                      <SelectItem value="cold">Cold</SelectItem>
+                      <SelectItem value="new">New</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              {bulkAction === "score" && (
+                <div className="space-y-4">
+                  <p>Boost lead scores by +10 points for all selected leads</p>
+                  <div className="bg-blue-50 dark:bg-blue-950/20 p-3 rounded">
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      This will increase each lead's score by 10 points (maximum 100)
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {bulkAction === "schedule" && (
+                <div className="space-y-4">
+                  <p>Schedule follow-up meetings for selected leads</p>
+                  <Button
+                    onClick={() => {
+                      setShowBulkDialog(false);
+                      setMeetingModalOpen(true);
+                    }}
+                    className="w-full"
+                  >
+                    Open Meeting Scheduler
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowBulkDialog(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={executeBulkAction}
+                disabled={bulkActionMutation.isPending}
+              >
+                {bulkActionMutation.isPending ? "Processing..." : "Execute Action"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Email Compose Modal */}
+        {emailModalOpen && (
+          <EmailComposeModal
+            open={emailModalOpen}
+            onClose={() => {
+              setEmailModalOpen(false);
+              setSelectedContact(null);
+            }}
+            contact={selectedContact}
+            bulkContacts={selectedLeads.length > 1 ? 
+              leads?.filter((lead: Contact) => selectedLeads.includes(lead.id)) : undefined
+            }
+          />
+        )}
+
+        {/* Meeting Scheduler Modal */}
+        {meetingModalOpen && (
+          <MeetingSchedulerModal
+            open={meetingModalOpen}
+            onClose={() => {
+              setMeetingModalOpen(false);
+              setSelectedContact(null);
+            }}
+            contact={selectedContact}
+          />
+        )}
       </main>
     </div>
   );
