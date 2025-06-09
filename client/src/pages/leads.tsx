@@ -649,15 +649,11 @@ export default function Leads() {
               {bulkAction === "email" && (
                 <div className="space-y-4">
                   <p>Send bulk email campaign to selected leads</p>
-                  <Button
-                    onClick={() => {
-                      setShowBulkDialog(false);
-                      setEmailModalOpen(true);
-                    }}
-                    className="w-full"
-                  >
-                    Open Email Composer
-                  </Button>
+                  <div className="bg-blue-50 dark:bg-blue-950/20 p-3 rounded">
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      This will send emails to {selectedLeads.length} selected leads
+                    </p>
+                  </div>
                 </div>
               )}
               
@@ -692,15 +688,11 @@ export default function Leads() {
               {bulkAction === "schedule" && (
                 <div className="space-y-4">
                   <p>Schedule follow-up meetings for selected leads</p>
-                  <Button
-                    onClick={() => {
-                      setShowBulkDialog(false);
-                      setMeetingModalOpen(true);
-                    }}
-                    className="w-full"
-                  >
-                    Open Meeting Scheduler
-                  </Button>
+                  <div className="bg-green-50 dark:bg-green-950/20 p-3 rounded">
+                    <p className="text-sm text-green-700 dark:text-green-300">
+                      This will create follow-up tasks for {selectedLeads.length} selected leads
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
@@ -723,14 +715,18 @@ export default function Leads() {
         {emailModalOpen && (
           <EmailComposeModal
             open={emailModalOpen}
-            onClose={() => {
-              setEmailModalOpen(false);
-              setSelectedContact(null);
+            onOpenChange={(open) => {
+              if (!open) {
+                setEmailModalOpen(false);
+                setSelectedContact(null);
+              }
             }}
             contact={selectedContact}
-            bulkContacts={selectedLeads.length > 1 ? 
-              leads?.filter((lead: Contact) => selectedLeads.includes(lead.id)) : undefined
+            contacts={selectedLeads.length > 1 ? 
+              leads?.filter((lead: Contact) => selectedLeads.includes(lead.id)) || [] : 
+              selectedContact ? [selectedContact] : []
             }
+            mode={selectedLeads.length > 1 ? 'bulk' : 'single'}
           />
         )}
 
@@ -738,9 +734,11 @@ export default function Leads() {
         {meetingModalOpen && (
           <MeetingSchedulerModal
             open={meetingModalOpen}
-            onClose={() => {
-              setMeetingModalOpen(false);
-              setSelectedContact(null);
+            onOpenChange={(open) => {
+              if (!open) {
+                setMeetingModalOpen(false);
+                setSelectedContact(null);
+              }
             }}
             contact={selectedContact}
           />
