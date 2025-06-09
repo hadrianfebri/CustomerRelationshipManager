@@ -73,18 +73,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, password } = req.body;
       
-      console.log('Login attempt for:', email);
-      console.log('Available team members:', teamStore.map(m => m.email));
-      
       // Find team member by email
       const teamMember = teamStore.find(member => member.email === email);
       
       if (!teamMember) {
-        console.log('Team member not found');
         return res.status(401).json({ message: "Invalid email or password" });
       }
-      
-      console.log('Found team member:', teamMember.email, 'Setup completed:', teamMember.hasCompletedSetup);
       
       // Check if member has completed setup
       if (!teamMember.hasCompletedSetup) {
@@ -92,9 +86,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify password (in production, use proper password hashing)
-      console.log('Checking password:', password, 'vs stored:', teamMember.password);
       if (teamMember.password !== password) {
-        console.log('Password mismatch');
         return res.status(401).json({ message: "Invalid email or password" });
       }
       
@@ -107,8 +99,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         role: teamMember.role,
         organizationRole: teamMember.organizationRole
       };
-      
-      console.log('Login successful for:', email);
       
       res.json({ 
         success: true, 
