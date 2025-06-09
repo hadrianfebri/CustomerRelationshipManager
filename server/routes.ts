@@ -202,6 +202,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk task operations
+  app.patch("/api/tasks/bulk", async (req, res) => {
+    try {
+      const { ids, updates } = req.body;
+      
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: "Invalid task IDs" });
+      }
+      
+      const results = [];
+      for (const id of ids) {
+        try {
+          const task = await storage.updateTask(id, updates);
+          if (task) results.push(task);
+        } catch (error) {
+          console.error(`Failed to update task ${id}:`, error);
+        }
+      }
+      
+      res.json({ 
+        updated: results.length,
+        tasks: results 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to bulk update tasks" });
+    }
+  });
+
+  // Automated follow-up task creation
+  app.post("/api/tasks/follow-up", async (req, res) => {
+    try {
+      const { contactId } = req.body;
+      
+      if (!contactId) {
+        return res.status(400).json({ message: "Contact ID is required" });
+      }
+      
+      const contact = await storage.getContact(contactId);
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      
+      // Create automated follow-up task
+      const followUpDate = new Date();
+      followUpDate.setDate(followUpDate.getDate() + 7); // Follow up in 7 days
+      
+      const taskData = {
+        organizationId: contact.organizationId,
+        contactId: contactId,
+        title: `Follow-up with ${contact.firstName} ${contact.lastName}`,
+        description: `Automated follow-up task created for ${contact.email}`,
+        priority: "medium" as const,
+        status: "pending" as const,
+        dueDate: followUpDate,
+        assignedTo: null,
+      };
+      
+      const task = await storage.createTask(taskData);
+      
+      res.status(201).json(task);
+    } catch (error) {
+      console.error("Follow-up task creation error:", error);
+      res.status(500).json({ message: "Failed to create follow-up task" });
+    }
+  });
+
   // Deals routes
   app.get("/api/deals", async (req, res) => {
     try {
