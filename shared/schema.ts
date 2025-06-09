@@ -110,6 +110,8 @@ export const insertTaskSchema = createInsertSchema(tasks).omit({
 export const insertDealSchema = createInsertSchema(deals).omit({
   id: true,
   createdAt: true,
+}).extend({
+  expectedCloseDate: z.string().transform((val) => new Date(val)).optional(),
 });
 
 export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit({
