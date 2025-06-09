@@ -103,7 +103,7 @@ export default function MeetingSchedulerModal({
         description: data.description || `${data.meetingType} meeting with ${contact.firstName} ${contact.lastName}`
       });
     },
-    onSuccess: (response) => {
+    onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/calendar/upcoming-meetings"] });
       
@@ -134,7 +134,7 @@ export default function MeetingSchedulerModal({
         urgency
       });
     },
-    onSuccess: (response) => {
+    onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/calendar/upcoming-meetings"] });
       
