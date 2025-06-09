@@ -1,12 +1,17 @@
-import { MailService } from '@sendgrid/mail';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const mailgun = require('mailgun-js');
 import type { Contact } from '@shared/schema';
 
-if (!process.env.SENDGRID_API_KEY) {
-  throw new Error("SENDGRID_API_KEY environment variable must be set");
+if (!process.env.MAILGUN_SECRET || !process.env.MAILGUN_DOMAIN) {
+  throw new Error("MAILGUN_SECRET and MAILGUN_DOMAIN environment variables must be set");
 }
 
-const mailService = new MailService();
-mailService.setApiKey(process.env.SENDGRID_API_KEY);
+const mg = mailgun({
+  apiKey: process.env.MAILGUN_SECRET,
+  domain: process.env.MAILGUN_DOMAIN,
+  host: process.env.MAILGUN_ENDPOINT || 'api.mailgun.net'
+});
 
 export interface EmailTemplate {
   id: string;
@@ -48,8 +53,8 @@ export interface EmailActivityLog {
 }
 
 class EmailService {
-  private fromEmail = 'noreply@yourcrm.com'; // Replace with your verified sender
-  private fromName = 'Your CRM System';
+  private fromEmail = process.env.MAIL_FROM_ADDRESS || 'no-reply@mediawave.co.id';
+  private fromName = process.env.MAIL_FROM_NAME || 'CRMWIZH';
 
   async sendSingleEmail(params: {
     to: string;
@@ -72,23 +77,18 @@ class EmailService {
         });
       }
 
-      await mailService.send({
-        to: {
-          email: params.to,
-          name: params.toName || ''
-        },
-        from: {
-          email: this.fromEmail,
-          name: this.fromName
-        },
+      const data = {
+        from: `${this.fromName} <${this.fromEmail}>`,
+        to: params.toName ? `${params.toName} <${params.to}>` : params.to,
         subject: processedSubject,
         html: processedHtml,
         text: params.textContent || this.stripHtml(processedHtml),
-      });
+      };
 
+      await mg.messages().send(data);
       return true;
     } catch (error) {
-      console.error('SendGrid email error:', error);
+      console.error('Mailgun email error:', error);
       return false;
     }
   }
