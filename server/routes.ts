@@ -1924,7 +1924,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                       title: 'Bulk follow-up email sent',
                       description: 'Bulk follow-up email sent via leads management',
                       date: new Date(),
-                      createdBy: 'system'
+                      createdBy: req.user.claims.sub
                     });
                   }
                 } catch (error) {
