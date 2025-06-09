@@ -1537,7 +1537,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Email Management Routes
-  app.post('/api/email/send-follow-up', isAuthenticated, async (req, res) => {
+  app.post('/api/email/send-follow-up', isAuthenticated, async (req: any, res) => {
     try {
       const { contactId, customMessage } = req.body;
       const contact = await storage.getContact(contactId);
@@ -1570,7 +1570,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/email/send-welcome', isAuthenticated, async (req, res) => {
+  app.post('/api/email/send-welcome', isAuthenticated, async (req: any, res) => {
     try {
       const { contactId } = req.body;
       const contact = await storage.getContact(contactId);
@@ -1602,7 +1602,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/email/send-bulk-campaign', isAuthenticated, async (req, res) => {
+  app.post('/api/email/send-bulk-campaign', isAuthenticated, async (req: any, res) => {
     try {
       const { contactIds, subject, htmlContent, textContent } = req.body;
       
@@ -1658,7 +1658,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Calendar Management Routes
-  app.post('/api/calendar/schedule-meeting', isAuthenticated, async (req, res) => {
+  app.post('/api/calendar/schedule-meeting', isAuthenticated, async (req: any, res) => {
     try {
       const { contactId, proposedTimes, meetingType, duration, description } = req.body;
       const contact = await storage.getContact(contactId);
@@ -1760,7 +1760,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/calendar/auto-schedule-follow-up', isAuthenticated, async (req, res) => {
+  app.post('/api/calendar/auto-schedule-follow-up', isAuthenticated, async (req: any, res) => {
     try {
       const { contactId, urgency } = req.body;
       const contact = await storage.getContact(contactId);
