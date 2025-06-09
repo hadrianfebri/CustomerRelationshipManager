@@ -8,24 +8,47 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MoreHorizontal, Mail, Phone, Edit, TrendingUp, Zap, Filter } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { MoreHorizontal, Mail, Phone, Edit, TrendingUp, Zap, Filter, Plus, Calendar, Target, Users, CheckSquare, ArrowUpDown, Search } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Contact } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import EmailComposeModal from "@/components/email/email-compose-modal";
+import MeetingSchedulerModal from "@/components/calendar/meeting-scheduler-modal";
 
 export default function Leads() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [scoreFilter, setScoreFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLeads, setSelectedLeads] = useState<number[]>([]);
+  const [sortBy, setSortBy] = useState<"name" | "score" | "date">("score");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [showBulkDialog, setShowBulkDialog] = useState(false);
+  const [bulkAction, setBulkAction] = useState<"email" | "update-status" | "score" | "schedule" | "">("");
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [meetingModalOpen, setMeetingModalOpen] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: leads, isLoading } = useQuery({
-    queryKey: ["/api/leads", { status: statusFilter !== "all" ? statusFilter : undefined, score: scoreFilter !== "all" ? scoreFilter : undefined }],
+    queryKey: ["/api/leads", { 
+      status: statusFilter !== "all" ? statusFilter : undefined, 
+      score: scoreFilter !== "all" ? scoreFilter : undefined,
+      search: searchQuery || undefined,
+      sortBy,
+      sortOrder
+    }],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (scoreFilter !== "all") params.append("score", scoreFilter);
+      if (searchQuery) params.append("search", searchQuery);
+      params.append("sortBy", sortBy);
+      params.append("sortOrder", sortOrder);
       
       const response = await fetch(`/api/leads?${params.toString()}`, { credentials: "include" });
       if (!response.ok) throw new Error("Failed to fetch leads");
@@ -83,6 +106,79 @@ export default function Leads() {
     },
   });
 
+  // Bulk actions mutation
+  const bulkActionMutation = useMutation({
+    mutationFn: async ({ action, leadIds, data }: { 
+      action: string; 
+      leadIds: number[]; 
+      data?: any 
+    }) => {
+      return await apiRequest("POST", "/api/leads/bulk-action", {
+        action,
+        leadIds,
+        data
+      });
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      setSelectedLeads([]);
+      setShowBulkDialog(false);
+      toast({
+        title: "Bulk action completed",
+        description: `Successfully processed ${variables.leadIds.length} leads`,
+      });
+    },
+  });
+
+  // Helper functions
+  const toggleLeadSelection = (leadId: number) => {
+    setSelectedLeads(prev => 
+      prev.includes(leadId) 
+        ? prev.filter(id => id !== leadId)
+        : [...prev, leadId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedLeads.length === leads?.length) {
+      setSelectedLeads([]);
+    } else {
+      setSelectedLeads(leads?.map((lead: Contact) => lead.id) || []);
+    }
+  };
+
+  const handleBulkAction = (action: "email" | "update-status" | "score" | "schedule") => {
+    setBulkAction(action);
+    setShowBulkDialog(true);
+  };
+
+  const executeBulkAction = () => {
+    if (!bulkAction || selectedLeads.length === 0) return;
+    
+    let data = {};
+    if (bulkAction === "update-status") {
+      data = { leadStatus: "warm" }; // Default warm status
+    } else if (bulkAction === "score") {
+      data = { leadScore: 10 }; // Add 10 points
+    }
+
+    bulkActionMutation.mutate({
+      action: bulkAction,
+      leadIds: selectedLeads,
+      data
+    });
+  };
+
+  const handleSort = (column: "name" | "score" | "date") => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(column);
+      setSortOrder("desc");
+    }
+  };
+
   const getLeadStatusBadge = (status: string, score: number) => {
     if (score >= 80) {
       return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Hot</Badge>;
@@ -109,6 +205,7 @@ export default function Leads() {
       <TopBar 
         title="Lead Management" 
         subtitle="Track, score, and manage your sales leads and prospects"
+        onSearch={setSearchQuery}
       />
       
       <main className="flex-1 overflow-auto p-6 bg-gray-50 dark:bg-background">
