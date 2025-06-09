@@ -10,6 +10,35 @@ import { calendarService } from "./calendar-service";
 import { insertContactSchema, insertActivitySchema, insertTaskSchema, insertDealSchema, insertEmailTemplateSchema } from "@shared/schema";
 import { z } from "zod";
 
+// Team member storage
+interface TeamMember {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  organizationRole: string;
+  isActive: boolean;
+  joinedAt: Date;
+  invitationId?: number;
+  password?: string;
+  hasCompletedSetup?: boolean;
+}
+
+interface Invitation {
+  id: number;
+  email: string;
+  role: string;
+  invitedBy: string;
+  invitedAt: Date;
+  expiresAt: Date;
+  status: 'pending' | 'accepted' | 'expired';
+  acceptedAt?: Date;
+}
+
+const teamStore: TeamMember[] = [];
+const invitationStore: Invitation[] = [];
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
@@ -32,7 +61,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { email, password } = req.body;
       
       // Find team member by email
-      const teamMember = teamStore.find(member => member.email === email);
+      const teamMember = teamStore.find((member: any) => member.email === email);
       
       if (!teamMember) {
         return res.status(401).json({ message: "Invalid email or password" });
@@ -49,7 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create session for team member
-      req.session.teamMember = {
+      (req.session as any).teamMember = {
         id: teamMember.id,
         email: teamMember.email,
         firstName: teamMember.firstName,
@@ -1259,7 +1288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       invitation.status = 'accepted';
       invitation.acceptedAt = new Date();
       
-      // Create new team member account (mock implementation)
+      // Create new team member account
       const newMember = {
         id: Date.now().toString(),
         firstName,
@@ -1269,8 +1298,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         organizationRole: invitation.role,
         isActive: true,
         joinedAt: new Date(),
-        invitationId: invitation.id
+        invitationId: invitation.id,
+        password: password, // Store password for login
+        hasCompletedSetup: true
       };
+      
+      // Add to team store
+      teamStore.push(newMember);
       
       console.log(`New team member joined: ${email} as ${invitation.role}`);
       
