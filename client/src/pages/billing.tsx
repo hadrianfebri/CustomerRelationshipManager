@@ -40,15 +40,15 @@ export default function Billing() {
 
   const { data: currentPlan, isLoading: planLoading } = useQuery({
     queryKey: ["/api/billing/current-plan"],
-  });
+  }) as { data?: any; isLoading: boolean };
 
   const { data: usage, isLoading: usageLoading } = useQuery({
     queryKey: ["/api/billing/usage"],
-  });
+  }) as { data?: any; isLoading: boolean };
 
   const { data: invoices, isLoading: invoicesLoading } = useQuery({
     queryKey: ["/api/billing/invoices"],
-  });
+  }) as { data?: any[]; isLoading: boolean };
 
   const changePlanMutation = useMutation({
     mutationFn: async (planId: string) => {
@@ -89,7 +89,7 @@ export default function Billing() {
       name: "Starter",
       price: 0,
       interval: "month",
-      current: currentPlan?.planType === "free",
+      current: (currentPlan as any)?.planType === "free",
       features: [
         { name: "Up to 100 contacts", included: true },
         { name: "3 team members", included: true },
@@ -106,7 +106,7 @@ export default function Billing() {
       price: 49,
       interval: "month",
       popular: true,
-      current: currentPlan?.planType === "pro",
+      current: (currentPlan as any)?.planType === "pro",
       features: [
         { name: "Up to 5,000 contacts", included: true },
         { name: "10 team members", included: true },
@@ -122,7 +122,7 @@ export default function Billing() {
       name: "Enterprise",
       price: 199,
       interval: "month",
-      current: currentPlan?.planType === "enterprise",
+      current: (currentPlan as any)?.planType === "enterprise",
       features: [
         { name: "Unlimited contacts", included: true },
         { name: "Unlimited team members", included: true },
@@ -172,12 +172,12 @@ export default function Billing() {
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{currentPlan?.planType || "Free"}</div>
+            <div className="text-2xl font-bold">{(currentPlan as any)?.planType || "Free"}</div>
             <div className="flex items-center gap-2 mt-2">
               <span className="text-sm text-muted-foreground">
-                ${currentPlan?.amount || 0}/month
+                ${(currentPlan as any)?.amount || 0}/month
               </span>
-              {currentPlan?.cancelAtPeriodEnd && (
+              {(currentPlan as any)?.cancelAtPeriodEnd && (
                 <Badge variant="destructive" className="text-xs">
                   Cancelling
                 </Badge>
@@ -193,10 +193,10 @@ export default function Billing() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {usage?.contacts || 0} / {currentPlan?.maxContacts || 100}
+              {(usage as any)?.contacts || 0} / {(currentPlan as any)?.maxContacts || 100}
             </div>
             <Progress 
-              value={(usage?.contacts || 0) / (currentPlan?.maxContacts || 100) * 100} 
+              value={((usage as any)?.contacts || 0) / ((currentPlan as any)?.maxContacts || 100) * 100} 
               className="mt-2"
             />
           </CardContent>
@@ -209,10 +209,10 @@ export default function Billing() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {usage?.teamMembers || 0} / {currentPlan?.maxUsers || 3}
+              {(usage as any)?.teamMembers || 0} / {(currentPlan as any)?.maxUsers || 3}
             </div>
             <Progress 
-              value={(usage?.teamMembers || 0) / (currentPlan?.maxUsers || 3) * 100} 
+              value={((usage as any)?.teamMembers || 0) / ((currentPlan as any)?.maxUsers || 3) * 100} 
               className="mt-2"
             />
           </CardContent>
@@ -220,7 +220,7 @@ export default function Billing() {
       </div>
 
       {/* Usage Alerts */}
-      {((usage?.contacts || 0) / (currentPlan?.maxContacts || 100) > 0.8) && (
+      {(((usage as any)?.contacts || 0) / ((currentPlan as any)?.maxContacts || 100) > 0.8) && (
         <Card className="mb-8 border-orange-200 bg-orange-50">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -322,7 +322,7 @@ export default function Billing() {
                 </div>
               ))}
             </div>
-          ) : invoices?.length > 0 ? (
+          ) : invoices && Array.isArray(invoices) && invoices.length > 0 ? (
             <div className="space-y-4">
               {invoices.map((invoice: any) => (
                 <div key={invoice.id} className="flex justify-between items-center py-3 border-b last:border-b-0">
