@@ -31,6 +31,7 @@ export default function Leads() {
   const [bulkActionData, setBulkActionData] = useState<any>({});
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -532,7 +533,12 @@ export default function Leads() {
                                   Call Lead
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedContact(lead);
+                                    setEditModalOpen(true);
+                                  }}
+                                >
                                   <Edit className="h-4 w-4 mr-2" />
                                   Edit Details
                                 </DropdownMenuItem>
@@ -761,6 +767,143 @@ export default function Leads() {
             }}
             contact={selectedContact}
           />
+        )}
+
+        {/* Edit Contact Modal */}
+        {editModalOpen && selectedContact && (
+          <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Edit Lead Details</DialogTitle>
+                <DialogDescription>
+                  Update information for {selectedContact.firstName} {selectedContact.lastName}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">First Name</label>
+                    <Input 
+                      defaultValue={selectedContact.firstName} 
+                      onChange={(e) => setSelectedContact({...selectedContact, firstName: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Last Name</label>
+                    <Input 
+                      defaultValue={selectedContact.lastName} 
+                      onChange={(e) => setSelectedContact({...selectedContact, lastName: e.target.value})}
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Email</label>
+                  <Input 
+                    type="email" 
+                    defaultValue={selectedContact.email} 
+                    onChange={(e) => setSelectedContact({...selectedContact, email: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Company</label>
+                  <Input 
+                    defaultValue={selectedContact.company || ""} 
+                    onChange={(e) => setSelectedContact({...selectedContact, company: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Position</label>
+                  <Input 
+                    defaultValue={selectedContact.position || ""} 
+                    onChange={(e) => setSelectedContact({...selectedContact, position: e.target.value})}
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Phone</label>
+                  <Input 
+                    defaultValue={selectedContact.phone || ""} 
+                    onChange={(e) => setSelectedContact({...selectedContact, phone: e.target.value})}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Lead Score</label>
+                    <Input 
+                      type="number" 
+                      min="0" 
+                      max="100" 
+                      defaultValue={selectedContact.leadScore || 0} 
+                      onChange={(e) => setSelectedContact({...selectedContact, leadScore: parseInt(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Status</label>
+                    <Select 
+                      defaultValue={selectedContact.leadStatus || "new"}
+                      onValueChange={(value) => setSelectedContact({...selectedContact, leadStatus: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hot">Hot</SelectItem>
+                        <SelectItem value="warm">Warm</SelectItem>
+                        <SelectItem value="cold">Cold</SelectItem>
+                        <SelectItem value="new">New</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={async () => {
+                    try {
+                      await apiRequest("PATCH", `/api/contacts/${selectedContact.id}`, {
+                        firstName: selectedContact.firstName,
+                        lastName: selectedContact.lastName,
+                        email: selectedContact.email,
+                        company: selectedContact.company,
+                        position: selectedContact.position,
+                        phone: selectedContact.phone,
+                        leadScore: selectedContact.leadScore,
+                        leadStatus: selectedContact.leadStatus
+                      });
+                      
+                      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+                      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+                      
+                      toast({
+                        title: "Contact updated",
+                        description: "Lead details have been saved successfully",
+                      });
+                      
+                      setEditModalOpen(false);
+                      setSelectedContact(null);
+                    } catch (error) {
+                      toast({
+                        title: "Error",
+                        description: "Failed to update contact details",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                >
+                  Save Changes
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         )}
       </main>
     </div>

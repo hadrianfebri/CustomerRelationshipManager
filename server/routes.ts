@@ -1881,6 +1881,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/leads/bulk-action', isAuthenticated, async (req: any, res) => {
     try {
       const { action, leadIds, data } = req.body;
+      console.log('Bulk action request:', { action, leadIds, data });
 
       if (!action || !leadIds || !Array.isArray(leadIds)) {
         return res.status(400).json({ message: 'Invalid bulk action request' });
