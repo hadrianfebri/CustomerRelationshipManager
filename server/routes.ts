@@ -1899,18 +1899,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
               break;
             
             case 'score':
-              const contact = await storage.getContact(leadId);
-              if (contact) {
-                const newScore = Math.min((contact.leadScore || 0) + (data.leadScore || 10), 100);
+              const contactForScore = await storage.getContact(leadId);
+              if (contactForScore) {
+                const newScore = Math.min((contactForScore.leadScore || 0) + (data.leadScore || 10), 100);
                 await storage.updateContact(leadId, { leadScore: newScore });
                 processed++;
               }
               break;
             
             case 'email':
-              // Email bulk action would be handled by email service
-              // For now, just mark as processed
-              processed++;
+              const contactForEmail = await storage.getContact(leadId);
+              if (contactForEmail && contactForEmail.email) {
+                try {
+                  const success = await emailService.sendFollowUpEmail(contactForEmail, 
+                    data.customMessage || "Thank you for your interest in our services. We'd love to discuss how we can help your business grow."
+                  );
+                  if (success) {
+                    processed++;
+                    // Log activity
+                    await storage.createActivity({
+                      contactId: leadId,
+                      organizationId: contactForEmail.organizationId,
+                      type: 'email',
+                      title: 'Bulk follow-up email sent',
+                      description: 'Bulk follow-up email sent via leads management',
+                      date: new Date(),
+                      createdBy: 'system'
+                    });
+                  }
+                } catch (error) {
+                  console.error(`Failed to send email to lead ${leadId}:`, error);
+                }
+              }
               break;
             
             case 'schedule':

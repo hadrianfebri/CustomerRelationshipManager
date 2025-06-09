@@ -161,6 +161,16 @@ export default function Leads() {
       data = { leadStatus: "warm" }; // Default warm status
     } else if (bulkAction === "score") {
       data = { leadScore: 10 }; // Add 10 points
+    } else if (bulkAction === "email") {
+      data = { 
+        customMessage: "Thank you for your interest in our services. We'd love to discuss how we can help your business grow and achieve your goals.",
+        subject: "Following up on your interest"
+      };
+    } else if (bulkAction === "schedule") {
+      data = { 
+        taskType: "follow-up",
+        priority: "medium"
+      };
     }
 
     bulkActionMutation.mutate({
