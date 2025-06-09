@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -31,18 +31,36 @@ export default function EditContactModal({ contact, open, onOpenChange }: EditCo
   const form = useForm<EditContactFormData>({
     resolver: zodResolver(editContactSchema),
     defaultValues: {
-      firstName: contact?.firstName || "",
-      lastName: contact?.lastName || "",
-      email: contact?.email || "",
-      phone: contact?.phone || "",
-      company: contact?.company || "",
-      position: contact?.position || "",
-      leadStatus: contact?.leadStatus || "new",
-      source: contact?.source || "",
-      notes: contact?.notes || "",
-      tags: contact?.tags || [],
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      company: "",
+      position: "",
+      leadStatus: "new",
+      source: "",
+      notes: "",
+      tags: [],
     },
   });
+
+  // Update form values when contact changes
+  useEffect(() => {
+    if (contact) {
+      form.reset({
+        firstName: contact.firstName || "",
+        lastName: contact.lastName || "",
+        email: contact.email || "",
+        phone: contact.phone || "",
+        company: contact.company || "",
+        position: contact.position || "",
+        leadStatus: contact.leadStatus || "new",
+        source: contact.source || "",
+        notes: contact.notes || "",
+        tags: contact.tags || [],
+      });
+    }
+  }, [contact, form]);
 
   const updateContactMutation = useMutation({
     mutationFn: async (data: EditContactFormData) => {
