@@ -48,10 +48,10 @@ interface AddDealModalProps {
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  value: z.string().min(1, "Value is required").transform((val) => val),
+  value: z.string().min(1, "Value is required"),
   stage: z.string().optional(),
-  probability: z.number().optional(),
-  contactId: z.number().optional(),
+  probability: z.coerce.number().optional(),
+  contactId: z.coerce.number().optional(),
   expectedCloseDate: z.date({
     required_error: "Expected close date is required",
   }),
@@ -117,9 +117,9 @@ export default function AddDealModal({ open, onOpenChange }: AddDealModalProps) 
 
   const handleSubmit = (data: FormData) => {
     const dealData: InsertDeal = {
-      organizationId: 1, // Add required organizationId
+      organizationId: 1,
       title: data.title,
-      value: data.value, // Keep as string for decimal conversion
+      value: data.value,
       stage: data.stage || "prospecting",
       probability: data.probability || 10,
       contactId: data.contactId || null,
