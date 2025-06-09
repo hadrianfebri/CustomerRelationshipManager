@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
 import { 
   BarChart, 
   Bar, 
@@ -80,7 +79,6 @@ interface ReportData {
 
 export default function Reports() {
   const [dateRange, setDateRange] = useState("30");
-  const [selectedMetric, setSelectedMetric] = useState("revenue");
   const [chartType, setChartType] = useState("bar");
 
   const { data: reportData, isLoading } = useQuery<ReportData>({
@@ -111,7 +109,6 @@ export default function Reports() {
     const hotLeads = contacts.filter((c: any) => (c.leadScore || 0) >= 80);
 
     const completedTasks = tasks.filter((t: any) => t.status === "completed");
-    const pendingTasks = tasks.filter((t: any) => t.status === "pending");
 
     return {
       salesMetrics: {
@@ -120,7 +117,7 @@ export default function Reports() {
         dealsLost: lostDeals.length,
         conversionRate,
         averageDealSize,
-        salesCycle: 18 // Average sales cycle in days
+        salesCycle: 18
       },
       leadMetrics: {
         totalLeads: contacts.length,
@@ -138,9 +135,7 @@ export default function Reports() {
         totalActivities: tasks.length,
         emailsSent: Math.floor(tasks.length * 0.6),
         callsMade: Math.floor(tasks.length * 0.3),
-        meetingsScheduled: Math.floor(tasks.length * 0.1),
-        tasksCompleted: completedTasks.length,
-        tasksPending: pendingTasks.length
+        meetingsScheduled: Math.floor(tasks.length * 0.1)
       },
       timeSeriesData: generateTimeSeriesData(),
       conversionFunnel: [
@@ -187,9 +182,9 @@ export default function Reports() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         <TopBar title="Reports & Analytics" subtitle="Loading analytics data..." />
-        <div className="flex-1 p-6">
+        <div className="flex-1 overflow-y-auto p-6">
           <div className="animate-pulse space-y-6">
             <div className="grid gap-6 md:grid-cols-4">
               {[1, 2, 3, 4].map((i) => (
@@ -204,554 +199,418 @@ export default function Reports() {
   }
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col min-h-0">
       <TopBar title="Reports & Analytics" subtitle="Track your sales performance and business metrics" />
       
-      <main className="flex-1 overflow-auto p-6 bg-gray-50 dark:bg-background">
-        {/* Controls */}
-        <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="flex gap-4">
-            <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Date Range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">Last 7 days</SelectItem>
-                <SelectItem value="30">Last 30 days</SelectItem>
-                <SelectItem value="90">Last 90 days</SelectItem>
-                <SelectItem value="365">Last year</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={chartType} onValueChange={setChartType}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Chart Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bar">Bar Chart</SelectItem>
-                <SelectItem value="line">Line Chart</SelectItem>
-                <SelectItem value="area">Area Chart</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <Button variant="outline" className="gap-2">
-            <Download className="h-4 w-4" />
-            Export Report
-          </Button>
-        </div>
-
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="sales">Sales</TabsTrigger>
-            <TabsTrigger value="leads">Leads</TabsTrigger>
-            <TabsTrigger value="activities">Activities</TabsTrigger>
-            <TabsTrigger value="performance">Performance</TabsTrigger>
-          </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            {/* Key Metrics Cards */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatCurrency(safeData.salesMetrics.totalRevenue)}</div>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-                    <span className="text-green-500">+12.5%</span>
-                    <span className="ml-1">from last month</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{safeData.leadMetrics.totalLeads}</div>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-                    <span className="text-green-500">+8.2%</span>
-                    <span className="ml-1">from last month</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Deals Won</CardTitle>
-                  <Target className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{safeData.salesMetrics.dealsWon}</div>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-                    <span className="text-green-500">+15.3%</span>
-                    <span className="ml-1">from last month</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
-                  <Activity className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatPercentage(safeData.salesMetrics.conversionRate)}</div>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-                    <span className="text-green-500">+2.1%</span>
-                    <span className="ml-1">from last month</span>
-                  </div>
-                </CardContent>
-              </Card>
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6 bg-gray-50 dark:bg-background space-y-6">
+          {/* Controls */}
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex gap-4">
+              <Select value={dateRange} onValueChange={setDateRange}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Date Range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">Last 7 days</SelectItem>
+                  <SelectItem value="30">Last 30 days</SelectItem>
+                  <SelectItem value="90">Last 90 days</SelectItem>
+                  <SelectItem value="365">Last year</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={chartType} onValueChange={setChartType}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Chart Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bar">Bar Chart</SelectItem>
+                  <SelectItem value="line">Line Chart</SelectItem>
+                  <SelectItem value="area">Area Chart</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+            
+            <Button variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              Export Report
+            </Button>
+          </div>
 
-            {/* Revenue Trend Chart */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Revenue Trend
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  {chartType === "bar" && (
-                    <BarChart data={safeData.timeSeriesData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => [formatCurrency(Number(value)), "Revenue"]} />
-                      <Bar dataKey="revenue" fill="#3B82F6" />
-                    </BarChart>
-                  )}
-                  {chartType === "line" && (
-                    <LineChart data={safeData.timeSeriesData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => [formatCurrency(Number(value)), "Revenue"]} />
-                      <Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={3} />
-                    </LineChart>
-                  )}
-                  {chartType === "area" && (
-                    <AreaChart data={safeData.timeSeriesData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => [formatCurrency(Number(value)), "Revenue"]} />
-                      <Area type="monotone" dataKey="revenue" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} />
-                    </AreaChart>
-                  )}
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+          <Tabs defaultValue="overview" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="sales">Sales</TabsTrigger>
+              <TabsTrigger value="leads">Leads</TabsTrigger>
+              <TabsTrigger value="activities">Activities</TabsTrigger>
+              <TabsTrigger value="performance">Performance</TabsTrigger>
+            </TabsList>
 
-            {/* Conversion Funnel */}
-            <div className="grid gap-6 md:grid-cols-2">
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-6">
+              {/* Key Metrics Cards */}
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{formatCurrency(safeData.salesMetrics.totalRevenue)}</div>
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
+                      <span className="text-green-500">+12.5%</span>
+                      <span className="ml-1">from last month</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{safeData.leadMetrics.totalLeads}</div>
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
+                      <span className="text-green-500">+8.2%</span>
+                      <span className="ml-1">from last month</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Deals Won</CardTitle>
+                    <Target className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{safeData.salesMetrics.dealsWon}</div>
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
+                      <span className="text-green-500">+15.3%</span>
+                      <span className="ml-1">from last month</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
+                    <Activity className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{formatPercentage(safeData.salesMetrics.conversionRate)}</div>
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
+                      <span className="text-green-500">+2.1%</span>
+                      <span className="ml-1">from last month</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Revenue Trend Chart */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5" />
-                    Conversion Funnel
+                    <BarChart3 className="h-5 w-5" />
+                    Revenue Trend
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {safeData.conversionFunnel.map((stage, index) => (
-                      <div key={stage.stage} className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full bg-blue-${600 - index * 100}`} />
-                          <span className="text-sm font-medium">{stage.stage}</span>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-bold">{stage.count}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {formatPercentage(stage.conversionRate)}
+                  <ResponsiveContainer width="100%" height={300}>
+                    {chartType === "bar" && (
+                      <BarChart data={safeData.timeSeriesData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="revenue" fill="#3B82F6" />
+                      </BarChart>
+                    )}
+                    {chartType === "line" && (
+                      <LineChart data={safeData.timeSeriesData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => [formatCurrency(Number(value)), "Revenue"]} />
+                        <Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={3} />
+                      </LineChart>
+                    )}
+                    {chartType === "area" && (
+                      <AreaChart data={safeData.timeSeriesData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => [formatCurrency(Number(value)), "Revenue"]} />
+                        <Area type="monotone" dataKey="revenue" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} />
+                      </AreaChart>
+                    )}
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Conversion Funnel and Lead Sources */}
+              <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="h-5 w-5" />
+                      Conversion Funnel
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {safeData.conversionFunnel.map((stage, index) => (
+                        <div key={stage.stage} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-3 h-3 rounded-full`} style={{ backgroundColor: COLORS[index] }} />
+                            <span className="text-sm font-medium">{stage.stage}</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-bold">{stage.count}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {formatPercentage(stage.conversionRate)}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <PieChartIcon className="h-5 w-5" />
-                    Lead Sources
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie
-                        data={safeData.leadMetrics.leadSources}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={40}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="count"
-                      >
-                        {safeData.leadMetrics.leadSources.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="mt-4 space-y-2">
-                    {safeData.leadMetrics.leadSources.map((source, index) => (
-                      <div key={source.source} className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                          />
-                          <span>{source.source}</span>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <PieChartIcon className="h-5 w-5" />
+                      Lead Sources
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie
+                          data={safeData.leadMetrics.leadSources}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={40}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="count"
+                        >
+                          {safeData.leadMetrics.leadSources.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="mt-4 space-y-2">
+                      {safeData.leadMetrics.leadSources.map((source, index) => (
+                        <div key={source.source} className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                            />
+                            <span>{source.source}</span>
+                          </div>
+                          <span className="font-medium">{source.count} ({source.percentage}%)</span>
                         </div>
-                        <span className="font-medium">{source.count} ({source.percentage}%)</span>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Sales Tab */}
+            <TabsContent value="sales" className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-3">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Sales Performance</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Total Revenue</span>
+                      <span className="font-bold">{formatCurrency(safeData.salesMetrics.totalRevenue)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Average Deal Size</span>
+                      <span className="font-bold">{formatCurrency(safeData.salesMetrics.averageDealSize)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Sales Cycle</span>
+                      <span className="font-bold">{safeData.salesMetrics.salesCycle} days</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Win Rate</span>
+                      <span className="font-bold">{formatPercentage(safeData.salesMetrics.conversionRate)}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Deal Status</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          <span className="text-sm">Won</span>
+                        </div>
+                        <Badge variant="secondary">{safeData.salesMetrics.dealsWon}</Badge>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Sales Tab */}
-          <TabsContent value="sales" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-3">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Sales Performance</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Total Revenue</span>
-                    <span className="font-bold">{formatCurrency(safeData.salesMetrics.totalRevenue)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Average Deal Size</span>
-                    <span className="font-bold">{formatCurrency(safeData.salesMetrics.averageDealSize)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Sales Cycle</span>
-                    <span className="font-bold">{safeData.salesMetrics.salesCycle} days</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Win Rate</span>
-                    <span className="font-bold">{formatPercentage(safeData.salesMetrics.conversionRate)}</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Deal Status</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">Won</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 text-red-500" />
+                          <span className="text-sm">Lost</span>
+                        </div>
+                        <Badge variant="secondary">{safeData.salesMetrics.dealsLost}</Badge>
                       </div>
-                      <Badge variant="secondary">{safeData.salesMetrics.dealsWon}</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle className="h-4 w-4 text-red-500" />
-                        <span className="text-sm">Lost</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-blue-500" />
+                          <span className="text-sm">In Progress</span>
+                        </div>
+                        <Badge variant="secondary">{deals.length - safeData.salesMetrics.dealsWon - safeData.salesMetrics.dealsLost}</Badge>
                       </div>
-                      <Badge variant="secondary">{safeData.salesMetrics.dealsLost}</Badge>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm">In Progress</span>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Performance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-green-600">92%</div>
+                      <div className="text-sm text-muted-foreground">Goal Achievement</div>
+                      <div className="mt-2">
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                          Excellent
+                        </Badge>
                       </div>
-                      <Badge variant="secondary">{deals.length - safeData.salesMetrics.dealsWon - safeData.salesMetrics.dealsLost}</Badge>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Top Performers</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Star className="h-4 w-4 text-yellow-500" />
-                        <span className="text-sm">hadrian</span>
+            {/* Activities Tab */}
+            <TabsContent value="activities" className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Activities</CardTitle>
+                    <Activity className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{safeData.activityMetrics.totalActivities}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Emails Sent</CardTitle>
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{safeData.activityMetrics.emailsSent}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Calls Made</CardTitle>
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{safeData.activityMetrics.callsMade}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Meetings</CardTitle>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{safeData.activityMetrics.meetingsScheduled}</div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Performance Tab */}
+            <TabsContent value="performance" className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Performance Metrics</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {formatPercentage(safeData.salesMetrics.conversionRate)}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Win Rate</div>
                       </div>
-                      <Badge>{formatCurrency(safeData.salesMetrics.totalRevenue)}</Badge>
+                      <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">2.4h</div>
+                        <div className="text-sm text-muted-foreground">Avg Response Time</div>
+                      </div>
+                      <div className="text-center p-4 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
+                        <div className="text-2xl font-bold text-orange-600">{safeData.salesMetrics.salesCycle}d</div>
+                        <div className="text-sm text-muted-foreground">Sales Cycle</div>
+                      </div>
+                      <div className="text-center p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600">8.2</div>
+                        <div className="text-sm text-muted-foreground">Lead Quality Score</div>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  </CardContent>
+                </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Sales Trend</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <ComposedChart data={safeData.timeSeriesData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="deals" fill="#10B981" />
-                    <Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={3} />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Leads Tab */}
-          <TabsContent value="leads" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-3">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Lead Overview</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Total Leads</span>
-                    <span className="font-bold">{safeData.leadMetrics.totalLeads}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Qualified Leads</span>
-                    <span className="font-bold">{safeData.leadMetrics.qualifiedLeads}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Hot Leads</span>
-                    <span className="font-bold text-red-600">{safeData.leadMetrics.hotLeads}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Qualification Rate</span>
-                    <span className="font-bold">
-                      {formatPercentage(safeData.leadMetrics.totalLeads > 0 ? (safeData.leadMetrics.qualifiedLeads / safeData.leadMetrics.totalLeads) * 100 : 0)}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Lead Quality Score</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-green-600">8.2</div>
-                    <div className="text-sm text-muted-foreground">out of 10</div>
-                    <div className="mt-2">
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">
-                        Excellent
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Lead Response Time</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-blue-600">2.4</div>
-                    <div className="text-sm text-muted-foreground">hours average</div>
-                    <div className="mt-2">
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                        Fast Response
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Lead Sources Performance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={safeData.leadMetrics.leadSources}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="source" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#3B82F6" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Activities Tab */}
-          <TabsContent value="activities" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Activities</CardTitle>
-                  <Activity className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{safeData.activityMetrics.totalActivities}</div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Emails Sent</CardTitle>
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{safeData.activityMetrics.emailsSent}</div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Calls Made</CardTitle>
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{safeData.activityMetrics.callsMade}</div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Meetings</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{safeData.activityMetrics.meetingsScheduled}</div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Activity Trends</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={safeData.timeSeriesData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="tasks" stroke="#10B981" strokeWidth={2} name="Tasks" />
-                    <Line type="monotone" dataKey="leads" stroke="#3B82F6" strokeWidth={2} name="Leads" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Performance Tab */}
-          <TabsContent value="performance" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Team Performance</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Goal Progress</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
                       <div>
-                        <div className="font-medium">hadrian</div>
-                        <div className="text-sm text-muted-foreground">Sales Rep</div>
+                        <div className="flex justify-between text-sm">
+                          <span>Monthly Revenue Goal</span>
+                          <span>78%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                          <div className="bg-blue-600 h-2 rounded-full" style={{ width: '78%' }}></div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold">{formatCurrency(safeData.salesMetrics.totalRevenue)}</div>
-                        <div className="text-sm text-green-600">Target: 120%</div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Goal Progress</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-sm">
-                        <span>Monthly Revenue Goal</span>
-                        <span>78%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: '78%' }}></div>
+                      <div>
+                        <div className="flex justify-between text-sm">
+                          <span>Lead Generation Goal</span>
+                          <span>92%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                          <div className="bg-green-600 h-2 rounded-full" style={{ width: '92%' }}></div>
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <div className="flex justify-between text-sm">
-                        <span>Lead Generation Goal</span>
-                        <span>92%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                        <div className="bg-green-600 h-2 rounded-full" style={{ width: '92%' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Performance Metrics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {formatPercentage(safeData.salesMetrics.conversionRate)}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Win Rate</div>
-                  </div>
-                  <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">2.4h</div>
-                    <div className="text-sm text-muted-foreground">Avg Response Time</div>
-                  </div>
-                  <div className="text-center p-4 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
-                    <div className="text-2xl font-bold text-orange-600">{safeData.salesMetrics.salesCycle}d</div>
-                    <div className="text-sm text-muted-foreground">Sales Cycle</div>
-                  </div>
-                  <div className="text-center p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">8.2</div>
-                    <div className="text-sm text-muted-foreground">Lead Quality Score</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   );
 }
