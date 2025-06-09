@@ -5,6 +5,8 @@ import { aiService } from "./ai-service";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { AdvancedLeadScoring } from "./lead-scoring";
 import { CampaignAutomation } from "./campaign-automation";
+import { emailService } from "./email-service";
+import { calendarService } from "./calendar-service";
 import { insertContactSchema, insertActivitySchema, insertTaskSchema, insertDealSchema, insertEmailTemplateSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -1531,6 +1533,269 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Reports API error:', error);
       res.status(500).json({ message: 'Failed to generate reports' });
+    }
+  });
+
+  // Email Management Routes
+  app.post('/api/email/send-follow-up', isAuthenticated, async (req, res) => {
+    try {
+      const { contactId, customMessage } = req.body;
+      const contact = await storage.getContact(contactId);
+      
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+
+      const success = await emailService.sendFollowUpEmail(contact, customMessage);
+      
+      if (success) {
+        // Log the email activity
+        await storage.createActivity({
+          contactId,
+          type: "email",
+          title: "Follow-up email sent",
+          description: `Automated follow-up email sent to ${contact.email}`,
+          date: new Date(),
+          organizationId: contact.organizationId,
+          createdBy: req.user.claims.sub
+        });
+        
+        res.json({ success: true, message: "Follow-up email sent successfully" });
+      } else {
+        res.status(500).json({ success: false, message: "Failed to send email" });
+      }
+    } catch (error) {
+      console.error('Error sending follow-up email:', error);
+      res.status(500).json({ message: 'Failed to send email' });
+    }
+  });
+
+  app.post('/api/email/send-welcome', isAuthenticated, async (req, res) => {
+    try {
+      const { contactId } = req.body;
+      const contact = await storage.getContact(contactId);
+      
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+
+      const success = await emailService.sendWelcomeEmail(contact);
+      
+      if (success) {
+        await storage.createActivity({
+          contactId,
+          type: "email",
+          title: "Welcome email sent",
+          description: `Welcome email sent to ${contact.email}`,
+          date: new Date(),
+          organizationId: contact.organizationId,
+          createdBy: req.user.claims.sub
+        });
+        
+        res.json({ success: true, message: "Welcome email sent successfully" });
+      } else {
+        res.status(500).json({ success: false, message: "Failed to send email" });
+      }
+    } catch (error) {
+      console.error('Error sending welcome email:', error);
+      res.status(500).json({ message: 'Failed to send email' });
+    }
+  });
+
+  app.post('/api/email/send-bulk-campaign', isAuthenticated, async (req, res) => {
+    try {
+      const { contactIds, subject, htmlContent, textContent } = req.body;
+      
+      const contacts = await Promise.all(
+        contactIds.map((id: number) => storage.getContact(id))
+      );
+      
+      const validContacts = contacts.filter(contact => contact !== undefined);
+      
+      if (validContacts.length === 0) {
+        return res.status(400).json({ message: "No valid contacts found" });
+      }
+
+      const result = await emailService.sendBulkCampaign({
+        contacts: validContacts,
+        subject,
+        htmlContent,
+        textContent
+      });
+      
+      // Log activities for sent emails
+      for (const contact of validContacts) {
+        await storage.createActivity({
+          contactId: contact.id,
+          type: "email",
+          title: "Campaign email sent",
+          description: `Campaign email sent: ${subject}`,
+          date: new Date(),
+          organizationId: contact.organizationId,
+          createdBy: req.user.claims.sub
+        });
+      }
+      
+      res.json({
+        success: true,
+        message: `Campaign sent to ${result.sent} contacts`,
+        details: result
+      });
+    } catch (error) {
+      console.error('Error sending bulk campaign:', error);
+      res.status(500).json({ message: 'Failed to send campaign' });
+    }
+  });
+
+  app.get('/api/email/templates', isAuthenticated, async (req, res) => {
+    try {
+      const templates = emailService.getEmailTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching email templates:', error);
+      res.status(500).json({ message: 'Failed to fetch templates' });
+    }
+  });
+
+  // Calendar Management Routes
+  app.post('/api/calendar/schedule-meeting', isAuthenticated, async (req, res) => {
+    try {
+      const { contactId, proposedTimes, meetingType, duration, description } = req.body;
+      const contact = await storage.getContact(contactId);
+      
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+
+      const result = await calendarService.scheduleFollowUpMeeting({
+        contactId,
+        contact,
+        proposedTimes: proposedTimes.map((time: string) => new Date(time)),
+        meetingType: meetingType || 'follow-up',
+        duration,
+        description,
+        createdBy: req.user.claims.sub
+      });
+      
+      if (result.success) {
+        // Log the meeting activity
+        await storage.createActivity({
+          contactId,
+          type: "meeting",
+          title: `${meetingType || 'Follow-up'} meeting scheduled`,
+          description: description || `Meeting scheduled with ${contact.firstName} ${contact.lastName}`,
+          date: new Date(),
+          organizationId: contact.organizationId,
+          createdBy: req.user.claims.sub
+        });
+      }
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error scheduling meeting:', error);
+      res.status(500).json({ message: 'Failed to schedule meeting' });
+    }
+  });
+
+  app.get('/api/calendar/available-slots', isAuthenticated, async (req, res) => {
+    try {
+      const { startDate, endDate, duration } = req.query;
+      
+      const start = new Date(startDate as string);
+      const end = new Date(endDate as string);
+      const meetingDuration = duration ? parseInt(duration as string) : 30;
+      
+      const slots = await calendarService.getAvailableTimeSlots(start, end, meetingDuration);
+      res.json(slots);
+    } catch (error) {
+      console.error('Error fetching available slots:', error);
+      res.status(500).json({ message: 'Failed to fetch available slots' });
+    }
+  });
+
+  app.get('/api/calendar/upcoming-meetings', isAuthenticated, async (req, res) => {
+    try {
+      const { days } = req.query;
+      const daysAhead = days ? parseInt(days as string) : 7;
+      
+      const meetings = await calendarService.getUpcomingMeetings(daysAhead);
+      res.json(meetings);
+    } catch (error) {
+      console.error('Error fetching upcoming meetings:', error);
+      res.status(500).json({ message: 'Failed to fetch meetings' });
+    }
+  });
+
+  app.post('/api/calendar/send-reminder/:eventId', isAuthenticated, async (req, res) => {
+    try {
+      const { eventId } = req.params;
+      const success = await calendarService.sendMeetingReminder(eventId);
+      
+      if (success) {
+        res.json({ success: true, message: "Reminder sent successfully" });
+      } else {
+        res.status(400).json({ success: false, message: "Failed to send reminder" });
+      }
+    } catch (error) {
+      console.error('Error sending meeting reminder:', error);
+      res.status(500).json({ message: 'Failed to send reminder' });
+    }
+  });
+
+  app.patch('/api/calendar/meeting/:eventId/status', isAuthenticated, async (req, res) => {
+    try {
+      const { eventId } = req.params;
+      const { status } = req.body;
+      
+      const success = await calendarService.updateMeetingStatus(eventId, status);
+      
+      if (success) {
+        res.json({ success: true, message: "Meeting status updated" });
+      } else {
+        res.status(404).json({ success: false, message: "Meeting not found" });
+      }
+    } catch (error) {
+      console.error('Error updating meeting status:', error);
+      res.status(500).json({ message: 'Failed to update meeting status' });
+    }
+  });
+
+  app.post('/api/calendar/auto-schedule-follow-up', isAuthenticated, async (req, res) => {
+    try {
+      const { contactId, urgency } = req.body;
+      const contact = await storage.getContact(contactId);
+      
+      if (!contact) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+
+      const eventId = await calendarService.autoScheduleFollowUp(contact, urgency || 'medium');
+      
+      if (eventId) {
+        await storage.createActivity({
+          contactId,
+          type: "meeting",
+          title: "Auto-scheduled follow-up",
+          description: `Automatically scheduled follow-up meeting based on ${urgency} priority`,
+          date: new Date(),
+          organizationId: contact.organizationId,
+          createdBy: req.user.claims.sub
+        });
+        
+        res.json({ 
+          success: true, 
+          eventId, 
+          message: "Follow-up meeting auto-scheduled successfully" 
+        });
+      } else {
+        res.status(400).json({ 
+          success: false, 
+          message: "No available slots for auto-scheduling" 
+        });
+      }
+    } catch (error) {
+      console.error('Error auto-scheduling follow-up:', error);
+      res.status(500).json({ message: 'Failed to auto-schedule follow-up' });
     }
   });
 
