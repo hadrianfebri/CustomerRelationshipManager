@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Brain, TrendingUp, MessageSquare, Mail, Calendar, AlertCircle, Loader2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Brain, TrendingUp, MessageSquare, Mail, Calendar, AlertCircle, Loader2, Copy, Edit, Send, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import EmailComposeModal from "@/components/email/email-compose-modal";
 import type { Contact } from "@shared/schema";
 
 interface AIContactInsightsProps {
@@ -31,6 +34,9 @@ export default function AIContactInsights({ contact, onScoreUpdate }: AIContactI
   const [insights, setInsights] = useState<AIInsight | null>(null);
   const [followUpRec, setFollowUpRec] = useState<FollowUpRecommendation | null>(null);
   const [generatedEmail, setGeneratedEmail] = useState<{subject: string; body: string} | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editedEmail, setEditedEmail] = useState({ subject: '', body: '' });
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const { toast } = useToast();
 
   // Load cached AI results when contact changes
@@ -165,6 +171,41 @@ export default function AIContactInsights({ contact, onScoreUpdate }: AIContactI
     } finally {
       setIsGeneratingEmail(false);
     }
+  };
+
+  const handleCopyEmail = () => {
+    if (!generatedEmail) return;
+    
+    const emailText = `Subject: ${generatedEmail.subject}\n\n${generatedEmail.body}`;
+    navigator.clipboard.writeText(emailText);
+    toast({
+      title: "Email Copied",
+      description: "Email content has been copied to clipboard"
+    });
+  };
+
+  const handleEditEmail = () => {
+    if (!generatedEmail) return;
+    
+    setEditedEmail({
+      subject: generatedEmail.subject,
+      body: generatedEmail.body
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEditedEmail = () => {
+    setGeneratedEmail(editedEmail);
+    setIsEditModalOpen(false);
+    toast({
+      title: "Email Updated",
+      description: "Your email changes have been saved"
+    });
+  };
+
+  const handleScheduleEmail = () => {
+    if (!generatedEmail) return;
+    setIsEmailModalOpen(true);
   };
 
   const getUrgencyColor = (urgency: string) => {
