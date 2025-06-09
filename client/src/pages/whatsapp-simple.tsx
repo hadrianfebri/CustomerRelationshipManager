@@ -657,7 +657,7 @@ export default function WhatsAppSimple() {
         </TabsContent>
 
         {/* Templates */}
-        <TabsContent value="templates" className="space-y-6">
+        <TabsContent value="templates" className="space-y-6 flex-1 overflow-auto">
           <Card>
             <CardHeader>
               <CardTitle>Template WhatsApp untuk UMKM</CardTitle>
