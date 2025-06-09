@@ -1799,6 +1799,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Notification Management Routes
+  app.get('/api/notifications', isAuthenticated, async (req: any, res) => {
+    try {
+      // Mock notifications for demo - replace with real database query
+      const notifications = [
+        {
+          id: '1',
+          title: 'New Lead Score Update',
+          message: 'Hadrian Febri lead score increased to 131 points',
+          type: 'success',
+          isRead: false,
+          createdAt: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
+          relatedTo: {
+            type: 'contact',
+            id: '3',
+            name: 'Hadrian Febri'
+          }
+        },
+        {
+          id: '2',
+          title: 'Email Campaign Sent',
+          message: 'Bulk email campaign sent to 1 contact successfully',
+          type: 'info',
+          isRead: false,
+          createdAt: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
+          relatedTo: {
+            type: 'email',
+            id: 'campaign_1',
+            name: 'Welcome Campaign'
+          }
+        },
+        {
+          id: '3',
+          title: 'Meeting Scheduled',
+          message: 'Follow-up meeting auto-scheduled with Hadrian Febri',
+          type: 'success',
+          isRead: true,
+          createdAt: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
+          relatedTo: {
+            type: 'meeting',
+            id: 'meeting_1',
+            name: 'Follow-up Call'
+          }
+        }
+      ];
+
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      res.status(500).json({ message: 'Failed to fetch notifications' });
+    }
+  });
+
+  app.patch('/api/notifications/:id/read', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      // Mock implementation - replace with real database update
+      console.log(`Marking notification ${id} as read`);
+      
+      res.json({ success: true, message: 'Notification marked as read' });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      res.status(500).json({ message: 'Failed to mark notification as read' });
+    }
+  });
+
+  app.patch('/api/notifications/mark-all-read', isAuthenticated, async (req: any, res) => {
+    try {
+      // Mock implementation - replace with real database update
+      console.log('Marking all notifications as read');
+      
+      res.json({ success: true, message: 'All notifications marked as read' });
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      res.status(500).json({ message: 'Failed to mark all notifications as read' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

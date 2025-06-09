@@ -396,17 +396,71 @@ export default function AIContactInsights({ contact, onScoreUpdate }: AIContactI
             </div>
             
             <div className="flex gap-2">
-              <Button size="sm" className="flex-1">
-                <Calendar className="w-4 h-4 mr-2" />
-                Schedule Send
+              <Button size="sm" onClick={handleScheduleEmail} className="flex-1 bg-blue-600 hover:bg-blue-700">
+                <Send className="w-4 h-4 mr-2" />
+                Send Now
               </Button>
-              <Button size="sm" variant="outline" className="flex-1">
-                Copy Email
+              <Button size="sm" variant="outline" onClick={handleCopyEmail}>
+                <Copy className="w-4 h-4 mr-2" />
+                Copy
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleEditEmail}>
+                <Edit className="w-4 h-4 mr-2" />
+                Edit
               </Button>
             </div>
           </CardContent>
         </Card>
       )}
+
+      {/* Edit Email Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit AI Generated Email</DialogTitle>
+            <DialogDescription>
+              Customize the email content before sending
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Subject</label>
+              <input
+                type="text"
+                value={editedEmail.subject}
+                onChange={(e) => setEditedEmail({ ...editedEmail, subject: e.target.value })}
+                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Email Content</label>
+              <Textarea
+                value={editedEmail.body}
+                onChange={(e) => setEditedEmail({ ...editedEmail, body: e.target.value })}
+                className="mt-1 min-h-[200px] resize-none"
+                placeholder="Edit your email content..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEditedEmail} className="bg-blue-600 hover:bg-blue-700">
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Email Compose Modal */}
+      <EmailComposeModal
+        contact={contact}
+        contacts={[contact]}
+        open={isEmailModalOpen}
+        onOpenChange={setIsEmailModalOpen}
+        mode="single"
+      />
     </div>
   );
 }
