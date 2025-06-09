@@ -117,11 +117,16 @@ export default function AddDealModal({ open, onOpenChange }: AddDealModalProps) 
 
   const handleSubmit = (data: FormData) => {
     const dealData: InsertDeal = {
-      ...data,
-      value: data.value, // This will be converted to decimal by the backend
-      contactId: data.contactId ? parseInt(data.contactId.toString()) : null,
       organizationId: 1, // Add required organizationId
+      title: data.title,
+      value: data.value, // Keep as string for decimal conversion
+      stage: data.stage || "prospecting",
+      probability: data.probability || 10,
+      contactId: data.contactId || null,
+      expectedCloseDate: data.expectedCloseDate,
+      notes: data.notes || null,
     };
+    console.log('Submitting deal data:', dealData);
     createDealMutation.mutate(dealData);
   };
 
