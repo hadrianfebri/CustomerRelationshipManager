@@ -180,6 +180,58 @@ export default function Reports() {
     return `${value.toFixed(1)}%`;
   };
 
+  const generateExportData = () => {
+    const headers = [
+      'Metric Category',
+      'Metric Name', 
+      'Value',
+      'Date Range',
+      'Export Date'
+    ];
+
+    const rows = [
+      ['Sales', 'Total Revenue', formatCurrency(safeData.salesMetrics.totalRevenue), `Last ${dateRange} days`, new Date().toLocaleDateString()],
+      ['Sales', 'Deals Won', safeData.salesMetrics.dealsWon.toString(), `Last ${dateRange} days`, new Date().toLocaleDateString()],
+      ['Sales', 'Deals Lost', safeData.salesMetrics.dealsLost.toString(), `Last ${dateRange} days`, new Date().toLocaleDateString()],
+      ['Sales', 'Conversion Rate', formatPercentage(safeData.salesMetrics.conversionRate), `Last ${dateRange} days`, new Date().toLocaleDateString()],
+      ['Sales', 'Average Deal Size', formatCurrency(safeData.salesMetrics.averageDealSize), `Last ${dateRange} days`, new Date().toLocaleDateString()],
+      ['Sales', 'Sales Cycle', `${safeData.salesMetrics.salesCycle} days`, `Last ${dateRange} days`, new Date().toLocaleDateString()],
+      ['Leads', 'Total Leads', safeData.leadMetrics.totalLeads.toString(), `Last ${dateRange} days`, new Date().toLocaleDateString()],
+      ['Leads', 'Qualified Leads', safeData.leadMetrics.qualifiedLeads.toString(), `Last ${dateRange} days`, new Date().toLocaleDateString()],
+      ['Leads', 'Hot Leads', safeData.leadMetrics.hotLeads.toString(), `Last ${dateRange} days`, new Date().toLocaleDateString()],
+      ['Activities', 'Total Activities', safeData.activityMetrics.totalActivities.toString(), `Last ${dateRange} days`, new Date().toLocaleDateString()],
+      ['Activities', 'Emails Sent', safeData.activityMetrics.emailsSent.toString(), `Last ${dateRange} days`, new Date().toLocaleDateString()],
+      ['Activities', 'Calls Made', safeData.activityMetrics.callsMade.toString(), `Last ${dateRange} days`, new Date().toLocaleDateString()],
+      ['Activities', 'Meetings Scheduled', safeData.activityMetrics.meetingsScheduled.toString(), `Last ${dateRange} days`, new Date().toLocaleDateString()],
+    ];
+
+    return [headers, ...rows];
+  };
+
+  const downloadCSV = (data: string[][], filename: string) => {
+    const csvContent = data.map(row => 
+      row.map(field => `"${field}"`).join(',')
+    ).join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handleExportReport = () => {
+    const reportContent = generateExportData();
+    downloadCSV(reportContent, `crm-report-${dateRange}-days-${new Date().toISOString().split('T')[0]}.csv`);
+  };
+
   if (isLoading) {
     return (
       <div className="flex-1 flex flex-col min-h-0">
@@ -231,7 +283,11 @@ export default function Reports() {
               </Select>
             </div>
             
-            <Button variant="outline" className="gap-2">
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={handleExportReport}
+            >
               <Download className="h-4 w-4" />
               Export Report
             </Button>
