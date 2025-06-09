@@ -2411,8 +2411,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createActivity({
         contactId: contact.id,
         type: 'whatsapp',
+        title: 'Order Confirmation',
         description: `Order confirmation sent for order ${orderDetails.orderNumber}`,
-        outcome: result.status === 'sent' ? 'success' : 'failed',
         organizationId: contact.organizationId,
       });
 
@@ -2437,8 +2437,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createActivity({
         contactId: contact.id,
         type: 'whatsapp',
+        title: 'Payment Reminder',
         description: `Payment reminder sent for order ${orderDetails.orderNumber}`,
-        outcome: result.status === 'sent' ? 'success' : 'failed',
         organizationId: contact.organizationId,
       });
 
@@ -2463,8 +2463,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createActivity({
         contactId: contact.id,
         type: 'whatsapp',
+        title: 'Follow-up Message',
         description: `Follow-up message sent for purchase on ${purchaseDate}`,
-        outcome: result.status === 'sent' ? 'success' : 'failed',
         organizationId: contact.organizationId,
       });
 
@@ -2508,8 +2508,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await storage.createActivity({
             contactId: result.contactId,
             type: 'whatsapp',
+            title: 'Broadcast Message',
             description: `Broadcast message: ${message.substring(0, 50)}...`,
-            outcome: result.status === 'sent' ? 'success' : 'failed',
             organizationId: 1,
           });
         }
