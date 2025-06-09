@@ -46,11 +46,16 @@ interface AddDealModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const formSchema = insertDealSchema.extend({
-  value: z.string().min(1, "Value is required"),
+const formSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  value: z.string().min(1, "Value is required").transform((val) => val),
+  stage: z.string().optional(),
+  probability: z.number().optional(),
+  contactId: z.number().optional(),
   expectedCloseDate: z.date({
     required_error: "Expected close date is required",
   }),
+  notes: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -113,8 +118,9 @@ export default function AddDealModal({ open, onOpenChange }: AddDealModalProps) 
   const handleSubmit = (data: FormData) => {
     const dealData: InsertDeal = {
       ...data,
-      value: data.value,
+      value: data.value, // This will be converted to decimal by the backend
       contactId: data.contactId ? parseInt(data.contactId.toString()) : null,
+      organizationId: 1, // Add required organizationId
     };
     createDealMutation.mutate(dealData);
   };
