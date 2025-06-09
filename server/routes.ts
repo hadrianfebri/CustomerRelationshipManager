@@ -7,6 +7,7 @@ import { AdvancedLeadScoring } from "./lead-scoring";
 import { CampaignAutomation } from "./campaign-automation";
 import { emailService } from "./email-service";
 import { calendarService } from "./calendar-service";
+import { whatsappService } from "./whatsapp-service";
 import { insertContactSchema, insertActivitySchema, insertTaskSchema, insertDealSchema, insertEmailTemplateSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -2343,6 +2344,226 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error executing bulk action:', error);
       res.status(500).json({ message: 'Failed to execute bulk action' });
+    }
+  });
+
+  // WhatsApp Business API routes
+  app.post('/api/whatsapp/send-message', isAuthenticated, async (req, res) => {
+    try {
+      const { contactId, message, type = 'text', templateName, templateParams } = req.body;
+      
+      if (!contactId || !message) {
+        return res.status(400).json({ message: 'Contact ID and message are required' });
+      }
+
+      const contact = await storage.getContact(contactId);
+      if (!contact) {
+        return res.status(404).json({ message: 'Contact not found' });
+      }
+
+      if (!contact.phone) {
+        return res.status(400).json({ message: 'Contact has no phone number' });
+      }
+
+      let result;
+      if (type === 'template' && templateName) {
+        result = await whatsappService.sendTemplateMessage(
+          contact.phone,
+          templateName,
+          templateParams || {},
+          contact.id
+        );
+      } else {
+        result = await whatsappService.sendTextMessage(
+          contact.phone,
+          message,
+          contact.id
+        );
+      }
+
+      // Log as activity
+      await storage.createActivity({
+        contactId: contact.id,
+        type: 'whatsapp',
+        title: 'WhatsApp Message',
+        description: `WhatsApp message sent: ${message.substring(0, 50)}...`,
+        organizationId: contact.organizationId,
+      });
+
+      res.json({ success: true, message: 'WhatsApp message sent', data: result });
+    } catch (error) {
+      console.error('WhatsApp send error:', error);
+      res.status(500).json({ message: 'Failed to send WhatsApp message' });
+    }
+  });
+
+  app.post('/api/whatsapp/send-order-confirmation', isAuthenticated, async (req, res) => {
+    try {
+      const { contactId, orderDetails } = req.body;
+      
+      const contact = await storage.getContact(contactId);
+      if (!contact) {
+        return res.status(404).json({ message: 'Contact not found' });
+      }
+
+      const result = await whatsappService.sendOrderConfirmation(contact, orderDetails);
+
+      await storage.createActivity({
+        contactId: contact.id,
+        type: 'whatsapp',
+        description: `Order confirmation sent for order ${orderDetails.orderNumber}`,
+        outcome: result.status === 'sent' ? 'success' : 'failed',
+        organizationId: contact.organizationId,
+      });
+
+      res.json({ success: true, message: 'Order confirmation sent', data: result });
+    } catch (error) {
+      console.error('WhatsApp order confirmation error:', error);
+      res.status(500).json({ message: 'Failed to send order confirmation' });
+    }
+  });
+
+  app.post('/api/whatsapp/send-payment-reminder', isAuthenticated, async (req, res) => {
+    try {
+      const { contactId, orderDetails } = req.body;
+      
+      const contact = await storage.getContact(contactId);
+      if (!contact) {
+        return res.status(404).json({ message: 'Contact not found' });
+      }
+
+      const result = await whatsappService.sendPaymentReminder(contact, orderDetails);
+
+      await storage.createActivity({
+        contactId: contact.id,
+        type: 'whatsapp',
+        description: `Payment reminder sent for order ${orderDetails.orderNumber}`,
+        outcome: result.status === 'sent' ? 'success' : 'failed',
+        organizationId: contact.organizationId,
+      });
+
+      res.json({ success: true, message: 'Payment reminder sent', data: result });
+    } catch (error) {
+      console.error('WhatsApp payment reminder error:', error);
+      res.status(500).json({ message: 'Failed to send payment reminder' });
+    }
+  });
+
+  app.post('/api/whatsapp/send-follow-up', isAuthenticated, async (req, res) => {
+    try {
+      const { contactId, purchaseDate } = req.body;
+      
+      const contact = await storage.getContact(contactId);
+      if (!contact) {
+        return res.status(404).json({ message: 'Contact not found' });
+      }
+
+      const result = await whatsappService.sendFollowUp(contact, purchaseDate);
+
+      await storage.createActivity({
+        contactId: contact.id,
+        type: 'whatsapp',
+        description: `Follow-up message sent for purchase on ${purchaseDate}`,
+        outcome: result.status === 'sent' ? 'success' : 'failed',
+        organizationId: contact.organizationId,
+      });
+
+      res.json({ success: true, message: 'Follow-up message sent', data: result });
+    } catch (error) {
+      console.error('WhatsApp follow-up error:', error);
+      res.status(500).json({ message: 'Failed to send follow-up message' });
+    }
+  });
+
+  app.post('/api/whatsapp/broadcast', isAuthenticated, async (req, res) => {
+    try {
+      const { contactIds, message, templateName, templateParams } = req.body;
+      
+      if (!contactIds || contactIds.length === 0) {
+        return res.status(400).json({ message: 'Contact IDs are required' });
+      }
+
+      const contacts = [];
+      for (const contactId of contactIds) {
+        const contact = await storage.getContact(contactId);
+        if (contact && contact.phone) {
+          contacts.push(contact);
+        }
+      }
+
+      if (contacts.length === 0) {
+        return res.status(400).json({ message: 'No valid contacts with phone numbers found' });
+      }
+
+      const results = await whatsappService.broadcastMessage(
+        contacts,
+        message,
+        templateName,
+        templateParams
+      );
+
+      // Log activities for each contact
+      for (const result of results) {
+        if (result.contactId) {
+          await storage.createActivity({
+            contactId: result.contactId,
+            type: 'whatsapp',
+            description: `Broadcast message: ${message.substring(0, 50)}...`,
+            outcome: result.status === 'sent' ? 'success' : 'failed',
+            organizationId: 1,
+          });
+        }
+      }
+
+      const successCount = results.filter(r => r.status === 'sent').length;
+      const failedCount = results.filter(r => r.status === 'failed').length;
+
+      res.json({ 
+        success: true, 
+        message: `Broadcast completed. ${successCount} sent, ${failedCount} failed.`,
+        results: {
+          total: results.length,
+          sent: successCount,
+          failed: failedCount
+        }
+      });
+    } catch (error) {
+      console.error('WhatsApp broadcast error:', error);
+      res.status(500).json({ message: 'Failed to send broadcast' });
+    }
+  });
+
+  app.get('/api/whatsapp/templates', isAuthenticated, async (req, res) => {
+    try {
+      const templates = whatsappService.getDefaultTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error('WhatsApp templates error:', error);
+      res.status(500).json({ message: 'Failed to fetch templates' });
+    }
+  });
+
+  // WhatsApp webhook for receiving messages and status updates
+  app.get('/api/whatsapp/webhook', (req, res) => {
+    const mode = req.query['hub.mode'];
+    const token = req.query['hub.verify_token'];
+    const challenge = req.query['hub.challenge'];
+
+    if (mode === 'subscribe' && whatsappService.verifyWebhook(token as string)) {
+      console.log('WhatsApp webhook verified');
+      res.status(200).send(challenge);
+    } else {
+      res.status(403).send('Forbidden');
+    }
+  });
+
+  app.post('/api/whatsapp/webhook', async (req, res) => {
+    try {
+      await whatsappService.processWebhook(req.body);
+      res.status(200).send('OK');
+    } catch (error) {
+      console.error('WhatsApp webhook processing error:', error);
+      res.status(500).send('Error');
     }
   });
 

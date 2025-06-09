@@ -18,6 +18,7 @@ import Automation from "@/pages/automation";
 import Landing from "@/pages/landing";
 import JoinTeam from "@/pages/join-team";
 import Login from "@/pages/login";
+import WhatsApp from "@/pages/whatsapp";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {
@@ -59,6 +60,7 @@ function Router() {
                 <Route path="/automation" component={Automation} />
                 <Route path="/billing" component={Billing} />
                 <Route path="/team" component={Team} />
+                <Route path="/whatsapp" component={WhatsApp} />
                 <Route component={NotFound} />
               </Switch>
             </div>
