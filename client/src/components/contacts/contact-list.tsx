@@ -3,13 +3,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MoreHorizontal, Mail, Phone, Edit, Trash } from "lucide-react";
+import { MoreHorizontal, Mail, Phone, Edit, Trash, Calendar, Send } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Contact } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import EditContactModal from "@/components/modals/edit-contact-modal";
+import EmailComposeModal from "@/components/email/email-compose-modal";
+import MeetingSchedulerModal from "@/components/calendar/meeting-scheduler-modal";
 
 
 interface ContactListProps {
@@ -24,6 +26,10 @@ export default function ContactList({ contacts, isLoading, onContactClick, selec
   const queryClient = useQueryClient();
   const [editContact, setEditContact] = useState<Contact | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [emailContact, setEmailContact] = useState<Contact | null>(null);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [meetingContact, setMeetingContact] = useState<Contact | null>(null);
+  const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
 
   const deleteContactMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -101,15 +107,14 @@ export default function ContactList({ contacts, isLoading, onContactClick, selec
 
   const handleSendEmail = (contact: Contact, e: React.MouseEvent) => {
     e.stopPropagation();
-    const subject = `Follow up with ${contact.firstName} ${contact.lastName}`;
-    const body = `Hi ${contact.firstName},\n\nI wanted to follow up with you regarding...`;
-    const mailtoUrl = `mailto:${contact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.open(mailtoUrl, '_blank');
-    
-    toast({
-      title: "Email Client Opened",
-      description: `Composed email to ${contact.email}`,
-    });
+    setEmailContact(contact);
+    setIsEmailModalOpen(true);
+  };
+
+  const handleScheduleMeeting = (contact: Contact, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setMeetingContact(contact);
+    setIsMeetingModalOpen(true);
   };
 
   const handleCall = (contact: Contact, e: React.MouseEvent) => {
@@ -212,6 +217,10 @@ export default function ContactList({ contacts, isLoading, onContactClick, selec
                         <Mail className="h-4 w-4 mr-2" />
                         Send Email
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => handleScheduleMeeting(contact, e)}>
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Schedule Meeting
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={(e) => handleCall(contact, e)}>
                         <Phone className="h-4 w-4 mr-2" />
                         Call
@@ -237,6 +246,20 @@ export default function ContactList({ contacts, isLoading, onContactClick, selec
       contact={editContact}
       open={isEditModalOpen}
       onOpenChange={setIsEditModalOpen}
+    />
+    
+    <EmailComposeModal
+      contact={emailContact}
+      contacts={contacts || []}
+      open={isEmailModalOpen}
+      onOpenChange={setIsEmailModalOpen}
+      mode="single"
+    />
+    
+    <MeetingSchedulerModal
+      contact={meetingContact}
+      open={isMeetingModalOpen}
+      onOpenChange={setIsMeetingModalOpen}
     />
     </>
   );
