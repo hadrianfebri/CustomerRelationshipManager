@@ -117,9 +117,49 @@ export default function Tasks() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({
         title: "Follow-up scheduled",
         description: "Automated follow-up task has been created.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create follow-up task.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const bulkCreateFollowUpsMutation = useMutation({
+    mutationFn: async (contactIds: number[]) => {
+      const results = await Promise.all(
+        contactIds.map(async (contactId) => {
+          try {
+            const response = await apiRequest("POST", "/api/tasks/follow-up", { contactId });
+            return response.json();
+          } catch (error) {
+            console.error(`Failed to create follow-up for contact ${contactId}:`, error);
+            return null;
+          }
+        })
+      );
+      return results.filter(Boolean);
+    },
+    onSuccess: (results) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({
+        title: "Bulk follow-ups created",
+        description: `Successfully created ${results.length} follow-up tasks.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create bulk follow-up tasks.",
+        variant: "destructive",
       });
     },
   });
@@ -452,16 +492,24 @@ export default function Tasks() {
               variant="outline" 
               className="h-auto p-4 flex flex-col items-start"
               onClick={() => {
-                // Create follow-up tasks for all leads
-                contacts.filter(c => c.leadStatus === "new" || c.leadStatus === "contacted").forEach(contact => {
-                  createFollowUpTaskMutation.mutate(contact.id);
-                });
+                const newLeads = contacts.filter(c => c.leadStatus === "new" || c.leadStatus === "contacted");
+                if (newLeads.length > 0) {
+                  bulkCreateFollowUpsMutation.mutate(newLeads.map(c => c.id));
+                } else {
+                  toast({
+                    title: "No new leads found",
+                    description: "All leads already have follow-up tasks or are closed.",
+                  });
+                }
               }}
+              disabled={bulkCreateFollowUpsMutation.isPending}
             >
               <Users className="h-6 w-6 mb-2 text-blue-600" />
               <div className="text-left">
                 <div className="font-medium">Follow-up New Leads</div>
-                <div className="text-sm text-gray-500">Create tasks for recent leads</div>
+                <div className="text-sm text-gray-500">
+                  {contacts.filter(c => c.leadStatus === "new" || c.leadStatus === "contacted").length} leads available
+                </div>
               </div>
             </Button>
             
@@ -469,13 +517,18 @@ export default function Tasks() {
               variant="outline" 
               className="h-auto p-4 flex flex-col items-start"
               onClick={() => {
-                // Schedule follow-ups for overdue tasks
-                tasks.filter(t => isOverdue(t.dueDate, t.status || "pending")).forEach(task => {
-                  if (task.contactId) {
-                    createFollowUpTaskMutation.mutate(task.contactId);
-                  }
-                });
+                const overdueTasks = tasks.filter(t => isOverdue(t.dueDate, t.status || "pending"));
+                const contactIds = overdueTasks.map(t => t.contactId).filter(Boolean) as number[];
+                if (contactIds.length > 0) {
+                  bulkCreateFollowUpsMutation.mutate(contactIds);
+                } else {
+                  toast({
+                    title: "No overdue tasks found",
+                    description: "All tasks are up to date.",
+                  });
+                }
               }}
+              disabled={bulkCreateFollowUpsMutation.isPending}
             >
               <Calendar className="h-6 w-6 mb-2 text-orange-600" />
               <div className="text-left">
