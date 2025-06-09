@@ -336,7 +336,7 @@ export default function Pipeline() {
                 <div>
                   <p className="text-green-100 text-sm">Active Deals</p>
                   <p className="text-2xl font-bold">
-                    {getFilteredDeals().filter(d => !['closed-won', 'closed-lost'].includes(d.stage)).length}
+                    {getFilteredDeals().filter(d => !['closed-won', 'closed-lost'].includes(d.stage || '')).length}
                   </p>
                 </div>
                 <Target className="h-8 w-8 text-green-200" />
@@ -365,8 +365,12 @@ export default function Pipeline() {
                 <div>
                   <p className="text-orange-100 text-sm">Close Rate</p>
                   <p className="text-2xl font-bold">
-                    {getFilteredDeals().length > 0 ? 
-                      Math.round((getDealsByStage('closed-won').length / getFilteredDeals().filter(d => ['closed-won', 'closed-lost'].includes(d.stage)).length) * 100) || 0 : 0}%
+                    {(() => {
+                      const allDeals = getFilteredDeals();
+                      const closedDeals = allDeals.filter(d => d.stage && ['closed-won', 'closed-lost'].includes(d.stage));
+                      return closedDeals.length > 0 ? 
+                        Math.round((getDealsByStage('closed-won').length / closedDeals.length) * 100) : 0;
+                    })()}%
                   </p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-orange-200" />
@@ -631,7 +635,7 @@ export default function Pipeline() {
                       stage: selectedDeal.stage,
                       probability: selectedDeal.probability,
                       expectedCloseDate: selectedDeal.expectedCloseDate,
-                      description: selectedDeal.description
+                      notes: selectedDeal.notes
                     });
                     
                     queryClient.invalidateQueries({ queryKey: ["/api/deals"] });
