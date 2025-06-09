@@ -17,6 +17,7 @@ import Team from "@/pages/team";
 import Automation from "@/pages/automation";
 import Landing from "@/pages/landing";
 import JoinTeam from "@/pages/join-team";
+import Login from "@/pages/login";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {
@@ -37,6 +38,7 @@ function Router() {
     <Switch>
       {/* Public routes for non-authenticated users */}
       <Route path="/join-team" component={JoinTeam} />
+      <Route path="/login" component={Login} />
       
       {/* Protected routes */}
       {!isAuthenticated ? (

@@ -80,7 +80,7 @@ export default function JoinTeam() {
       
       // Redirect to login page
       setTimeout(() => {
-        setLocation('/api/login');
+        setLocation('/login');
       }, 2000);
     },
     onError: (error: any) => {
@@ -115,7 +115,7 @@ export default function JoinTeam() {
               <p className="text-gray-600 mb-4">
                 Your account has been created successfully. You'll be redirected to login shortly.
               </p>
-              <Button onClick={() => setLocation('/api/login')} className="w-full">
+              <Button onClick={() => setLocation('/login')} className="w-full">
                 Go to Login
               </Button>
             </div>

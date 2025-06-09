@@ -26,6 +26,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Team member login endpoint
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      // Find team member by email
+      const teamMember = teamStore.find(member => member.email === email);
+      
+      if (!teamMember) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+      
+      // Check if member has completed setup
+      if (!teamMember.hasCompletedSetup) {
+        return res.status(401).json({ message: "Please complete your account setup first" });
+      }
+      
+      // Verify password (in production, use proper password hashing)
+      if (teamMember.password !== password) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+      
+      // Create session for team member
+      req.session.teamMember = {
+        id: teamMember.id,
+        email: teamMember.email,
+        firstName: teamMember.firstName,
+        lastName: teamMember.lastName,
+        role: teamMember.role,
+        organizationId: teamMember.organizationId
+      };
+      
+      res.json({ 
+        success: true, 
+        user: {
+          id: teamMember.id,
+          email: teamMember.email,
+          firstName: teamMember.firstName,
+          lastName: teamMember.lastName,
+          role: teamMember.role
+        }
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
   // Protected Contacts routes
   app.get("/api/contacts", isAuthenticated, async (req, res) => {
     try {
