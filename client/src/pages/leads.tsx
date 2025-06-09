@@ -197,14 +197,23 @@ export default function Leads() {
   };
 
   const getLeadStatusBadge = (status: string, score: number) => {
-    if (score >= 80) {
-      return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Hot</Badge>;
-    } else if (score >= 50) {
-      return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">Warm</Badge>;
-    } else if (score >= 20) {
-      return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">Cold</Badge>;
-    } else {
-      return <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400">New</Badge>;
+    // Use actual leadStatus if available, otherwise fall back to score-based logic
+    const actualStatus = status || (
+      score >= 80 ? 'hot' : 
+      score >= 50 ? 'warm' : 
+      score >= 20 ? 'cold' : 'new'
+    );
+    
+    switch (actualStatus.toLowerCase()) {
+      case 'hot':
+        return <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Hot</Badge>;
+      case 'warm':
+        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">Warm</Badge>;
+      case 'cold':
+        return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">Cold</Badge>;
+      case 'new':
+      default:
+        return <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400">New</Badge>;
     }
   };
 
@@ -464,7 +473,7 @@ export default function Leads() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-2">
-                              <span className="font-medium">{lead.leadScore || 0}</span>
+                              <span className="font-medium text-lg">{lead.leadScore || 0}</span>
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -472,6 +481,7 @@ export default function Leads() {
                                   id: lead.id, 
                                   leadScore: Math.min((lead.leadScore || 0) + 10, 100) 
                                 })}
+                                className="text-xs px-2 py-1 h-6"
                               >
                                 +10
                               </Button>
