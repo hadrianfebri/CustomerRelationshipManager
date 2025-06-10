@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { MessageCircle, ExternalLink, Copy, Phone, ShoppingCart, CreditCard, Star, Megaphone, CheckCircle, Info } from "lucide-react";
+import { MessageCircle, ExternalLink, Copy, Phone, ShoppingCart, CreditCard, Star, Megaphone, CheckCircle, Info, FileText } from "lucide-react";
 
 interface Contact {
   id: number;
@@ -752,12 +753,14 @@ export default function WhatsAppSimple() {
                   untuk kemudahan pengelolaan yang lebih baik. Anda dapat membuat, mengedit, 
                   dan mengorganisir template dengan lebih mudah di sana.
                 </p>
-                <Link href="/whatsapp-templates">
-                  <Button size="lg" className="mb-2">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Buka WhatsApp Templates
-                  </Button>
-                </Link>
+                <Button 
+                  size="lg" 
+                  className="mb-2"
+                  onClick={() => window.location.href = '/whatsapp-templates'}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Buka WhatsApp Templates
+                </Button>
                 <p className="text-xs text-muted-foreground">
                   Template tersedia: Konfirmasi Pesanan, Reminder Pembayaran, Follow-up, dan Promo
                 </p>
