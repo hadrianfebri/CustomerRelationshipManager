@@ -9,7 +9,7 @@ import { emailService } from "./email-service";
 import { calendarService } from "./calendar-service";
 import { whatsappService } from "./whatsapp-service";
 import { simpleWhatsAppService } from "./whatsapp-simple";
-import { insertContactSchema, insertActivitySchema, insertTaskSchema, insertDealSchema, insertEmailTemplateSchema } from "@shared/schema";
+import { insertContactSchema, insertActivitySchema, insertTaskSchema, insertDealSchema, insertEmailTemplateSchema, insertWhatsappTemplateSchema } from "@shared/schema";
 import { z } from "zod";
 
 // Team member storage

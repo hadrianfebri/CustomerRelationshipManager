@@ -119,7 +119,28 @@ export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit
   createdAt: true,
 });
 
+export const whatsappTemplates = pgTable("whatsapp_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  content: text("content").notNull(),
+  variables: text("variables").array().default([]),
+  category: text("category").notNull(), // order, payment, followup, promo, custom
+  isActive: boolean("is_active").default(true),
+  isDefault: boolean("is_default").default(false),
+  organizationId: integer("organization_id").references(() => organizations.id),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertAiResultSchema = createInsertSchema(aiResults).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWhatsappTemplateSchema = createInsertSchema(whatsappTemplates).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -136,6 +157,8 @@ export type Deal = typeof deals.$inferSelect;
 export type InsertDeal = z.infer<typeof insertDealSchema>;
 export type EmailTemplate = typeof emailTemplates.$inferSelect;
 export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
+export type WhatsappTemplate = typeof whatsappTemplates.$inferSelect;
+export type InsertWhatsappTemplate = z.infer<typeof insertWhatsappTemplateSchema>;
 export type AiResult = typeof aiResults.$inferSelect;
 export type InsertAiResult = z.infer<typeof insertAiResultSchema>;
 

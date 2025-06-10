@@ -1,10 +1,11 @@
 import { 
-  contacts, activities, tasks, deals, emailTemplates, users, aiResults,
+  contacts, activities, tasks, deals, emailTemplates, whatsappTemplates, users, aiResults,
   type Contact, type InsertContact,
   type Activity, type InsertActivity,
   type Task, type InsertTask,
   type Deal, type InsertDeal,
   type EmailTemplate, type InsertEmailTemplate,
+  type WhatsappTemplate, type InsertWhatsappTemplate,
   type User, type UpsertUser,
   type AiResult, type InsertAiResult
 } from "@shared/schema";
@@ -49,6 +50,13 @@ export interface IStorage {
   createEmailTemplate(template: InsertEmailTemplate): Promise<EmailTemplate>;
   updateEmailTemplate(id: number, template: Partial<InsertEmailTemplate>): Promise<EmailTemplate | undefined>;
   deleteEmailTemplate(id: number): Promise<boolean>;
+
+  // WhatsApp Templates
+  getAllWhatsappTemplates(): Promise<WhatsappTemplate[]>;
+  getWhatsappTemplate(id: number): Promise<WhatsappTemplate | undefined>;
+  createWhatsappTemplate(template: InsertWhatsappTemplate): Promise<WhatsappTemplate>;
+  updateWhatsappTemplate(id: number, template: Partial<InsertWhatsappTemplate>): Promise<WhatsappTemplate | undefined>;
+  deleteWhatsappTemplate(id: number): Promise<boolean>;
 
   // AI Results Cache
   getCachedAiResult(contactId: number, resultType: string, purpose?: string): Promise<AiResult | undefined>;
@@ -710,6 +718,48 @@ export class DatabaseStorage implements IStorage {
 
   async deleteEmailTemplate(id: number): Promise<boolean> {
     const result = await db.delete(emailTemplates).where(eq(emailTemplates.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // WhatsApp Templates
+  async getAllWhatsappTemplates(): Promise<WhatsappTemplate[]> {
+    return await db.select().from(whatsappTemplates).orderBy(whatsappTemplates.createdAt);
+  }
+
+  async getWhatsappTemplate(id: number): Promise<WhatsappTemplate | undefined> {
+    const [template] = await db
+      .select()
+      .from(whatsappTemplates)
+      .where(eq(whatsappTemplates.id, id));
+    return template || undefined;
+  }
+
+  async createWhatsappTemplate(insertTemplate: InsertWhatsappTemplate): Promise<WhatsappTemplate> {
+    const [template] = await db
+      .insert(whatsappTemplates)
+      .values({
+        ...insertTemplate,
+        organizationId: 1, // Default organization for now
+        createdAt: new Date(),
+      })
+      .returning();
+    return template;
+  }
+
+  async updateWhatsappTemplate(id: number, templateUpdate: Partial<InsertWhatsappTemplate>): Promise<WhatsappTemplate | undefined> {
+    const [template] = await db
+      .update(whatsappTemplates)
+      .set({
+        ...templateUpdate,
+        updatedAt: new Date(),
+      })
+      .where(eq(whatsappTemplates.id, id))
+      .returning();
+    return template || undefined;
+  }
+
+  async deleteWhatsappTemplate(id: number): Promise<boolean> {
+    const result = await db.delete(whatsappTemplates).where(eq(whatsappTemplates.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 
