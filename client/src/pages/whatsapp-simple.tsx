@@ -735,34 +735,32 @@ export default function WhatsAppSimple() {
         <TabsContent value="templates" className="space-y-6 flex-1 overflow-auto">
           <Card>
             <CardHeader>
-              <CardTitle>Template WhatsApp untuk UMKM</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Template WhatsApp
+              </CardTitle>
               <CardDescription>
-                Template siap pakai yang mudah digunakan
+                Kelola template pesan WhatsApp Anda di menu khusus
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {templates?.map((template) => (
-                  <Card key={template.id} className="border">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-medium">{template.name}</CardTitle>
-                        <Badge variant="secondary">{template.category}</Badge>
-                      </div>
-                      <CardDescription className="text-xs">
-                        {template.description}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-2 rounded">
-                        {template.template.substring(0, 150)}...
-                      </div>
-                      <div className="mt-2 text-xs">
-                        <strong>Variables:</strong> {template.variables.join(', ')}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+              <div className="text-center py-8">
+                <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Template Dipindahkan</h3>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  Semua template WhatsApp sekarang berada di menu "WhatsApp Templates" 
+                  untuk kemudahan pengelolaan yang lebih baik. Anda dapat membuat, mengedit, 
+                  dan mengorganisir template dengan lebih mudah di sana.
+                </p>
+                <Link href="/whatsapp-templates">
+                  <Button size="lg" className="mb-2">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Buka WhatsApp Templates
+                  </Button>
+                </Link>
+                <p className="text-xs text-muted-foreground">
+                  Template tersedia: Konfirmasi Pesanan, Reminder Pembayaran, Follow-up, dan Promo
+                </p>
               </div>
             </CardContent>
           </Card>

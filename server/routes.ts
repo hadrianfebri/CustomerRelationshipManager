@@ -2490,7 +2490,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WhatsApp Template CRUD routes
   app.get('/api/whatsapp/templates/custom', isAuthenticated, async (req, res) => {
     try {
-      const templates = await storage.getAllWhatsappTemplates();
+      let templates = await storage.getAllWhatsappTemplates();
+      
+      // Seed default templates if none exist
+      if (templates.length === 0) {
+        const defaultTemplates = [
+          {
+            name: 'Konfirmasi Pesanan',
+            content: `Halo {{nama_customer}}! 👋\n\nTerima kasih sudah order di {{nama_toko}}!\n\n📦 *Detail Pesanan:*\nOrder ID: {{order_id}}\nItem: {{item_list}}\nTotal: {{total_harga}}\n\n📅 Estimasi kirim: {{estimasi_kirim}}\n📍 Alamat: {{alamat}}\n\nPembayaran bisa transfer ke:\nBCA: 1234567890 a.n {{nama_toko}}\n\nKonfirmasi pembayaran kirim bukti transfer ya!\n\nTerima kasih! 🙏`,
+            category: 'order_confirmation',
+            description: 'Template konfirmasi pesanan untuk toko online',
+            isActive: true,
+            organizationId: 1,
+            createdBy: 'system',
+          },
+          {
+            name: 'Reminder Pembayaran',
+            content: `Halo {{nama_customer}}! 😊\n\nIni reminder untuk pesanan:\nOrder ID: {{order_id}}\nTotal: {{total_harga}}\n\nJangan lupa transfer ya ke:\n{{rekening_bank}}\n\nBatas waktu: {{batas_waktu}}\n\nKalau sudah transfer, kirim bukti ya!\nTerima kasih! 🙏`,
+            category: 'payment_reminder',
+            description: 'Mengingatkan customer untuk bayar',
+            isActive: true,
+            organizationId: 1,
+            createdBy: 'system',
+          },
+          {
+            name: 'Follow-up Kepuasan',
+            content: `Halo {{nama_customer}}! 😊\n\nGimana barangnya? Sudah sampai dengan baik kan?\n\nKalau puas sama produk dan pelayanan kami, boleh kasih review bintang 5 di:\n{{link_review}}\n\nReview dari customer sangat membantu toko kami berkembang!\n\nTerima kasih banyak! ⭐⭐⭐⭐⭐`,
+            category: 'follow_up',
+            description: 'Tanya kepuasan customer setelah terima barang',
+            isActive: true,
+            organizationId: 1,
+            createdBy: 'system',
+          },
+          {
+            name: 'Broadcast Promo',
+            content: `🎉 *PROMO SPESIAL* {{nama_toko}}! 🎉\n\n{{judul_promo}}\n\n💰 Diskon: {{diskon}}\n⏰ Berlaku: {{periode_promo}}\n🛍️ Min. pembelian: {{min_beli}}\n\nCara order:\n1. Chat WhatsApp ini\n2. Sebutkan kode: {{kode_promo}}\n3. Pilih produk favorit\n\nJangan sampai kehabisan ya! Stock terbatas!\n\n{{link_catalog}}`,
+            category: 'promotion',
+            description: 'Template untuk broadcast promo atau info terbaru',
+            isActive: true,
+            organizationId: 1,
+            createdBy: 'system',
+          }
+        ];
+
+        // Create default templates
+        for (const template of defaultTemplates) {
+          await storage.createWhatsappTemplate(template);
+        }
+        
+        // Fetch templates again after seeding
+        templates = await storage.getAllWhatsappTemplates();
+      }
+      
       res.json(templates);
     } catch (error) {
       console.error('Get WhatsApp templates error:', error);
