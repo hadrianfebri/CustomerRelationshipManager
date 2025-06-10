@@ -10,7 +10,8 @@ import {
   CreditCard,
   UsersIcon,
   Zap,
-  MessageCircle
+  MessageCircle,
+  FileText
 } from "lucide-react";
 import UserMenu from "./user-menu";
 
@@ -23,6 +24,7 @@ const navigation = [
   { name: "Reports", href: "/reports", icon: BarChart },
   { name: "Email Templates", href: "/email-templates", icon: Mail },
   { name: "WhatsApp Business", href: "/whatsapp", icon: MessageCircle },
+  { name: "WhatsApp Templates", href: "/whatsapp-templates", icon: FileText },
   { name: "AI Automation", href: "/automation", icon: Zap },
   { name: "Team Management", href: "/team", icon: UsersIcon },
   { name: "Billing & Plans", href: "/billing", icon: CreditCard },
