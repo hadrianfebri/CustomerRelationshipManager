@@ -19,6 +19,7 @@ import Landing from "@/pages/landing";
 import JoinTeam from "@/pages/join-team";
 import Login from "@/pages/login";
 import WhatsAppSimple from "@/pages/whatsapp-simple";
+import WhatsAppTemplates from "@/pages/whatsapp-templates";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {
@@ -61,6 +62,7 @@ function Router() {
                 <Route path="/billing" component={Billing} />
                 <Route path="/team" component={Team} />
                 <Route path="/whatsapp" component={WhatsAppSimple} />
+                <Route path="/whatsapp-templates" component={WhatsAppTemplates} />
                 <Route component={NotFound} />
               </Switch>
             </div>

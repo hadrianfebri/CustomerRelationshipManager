@@ -2487,6 +2487,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // WhatsApp Template CRUD routes
+  app.get('/api/whatsapp/templates/custom', isAuthenticated, async (req, res) => {
+    try {
+      const templates = await storage.getAllWhatsappTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error('Get WhatsApp templates error:', error);
+      res.status(500).json({ message: 'Failed to get WhatsApp templates' });
+    }
+  });
+
+  app.get('/api/whatsapp/templates/custom/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const template = await storage.getWhatsappTemplate(id);
+      
+      if (!template) {
+        return res.status(404).json({ message: 'Template not found' });
+      }
+      
+      res.json(template);
+    } catch (error) {
+      console.error('Get WhatsApp template error:', error);
+      res.status(500).json({ message: 'Failed to get WhatsApp template' });
+    }
+  });
+
+  app.post('/api/whatsapp/templates/custom', isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = insertWhatsappTemplateSchema.parse(req.body);
+      
+      const template = await storage.createWhatsappTemplate({
+        ...validatedData,
+        createdBy: req.user?.claims?.sub || 'unknown',
+        organizationId: 1,
+      });
+      
+      res.status(201).json(template);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid template data', errors: error.errors });
+      }
+      console.error('Create WhatsApp template error:', error);
+      res.status(500).json({ message: 'Failed to create WhatsApp template' });
+    }
+  });
+
+  app.put('/api/whatsapp/templates/custom/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertWhatsappTemplateSchema.partial().parse(req.body);
+      
+      const template = await storage.updateWhatsappTemplate(id, validatedData);
+      
+      if (!template) {
+        return res.status(404).json({ message: 'Template not found' });
+      }
+      
+      res.json(template);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid template data', errors: error.errors });
+      }
+      console.error('Update WhatsApp template error:', error);
+      res.status(500).json({ message: 'Failed to update WhatsApp template' });
+    }
+  });
+
+  app.delete('/api/whatsapp/templates/custom/:id', isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteWhatsappTemplate(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: 'Template not found' });
+      }
+      
+      res.json({ message: 'Template deleted successfully' });
+    } catch (error) {
+      console.error('Delete WhatsApp template error:', error);
+      res.status(500).json({ message: 'Failed to delete WhatsApp template' });
+    }
+  });
+
   // WhatsApp Business API routes (advanced - requires API key)
   app.get('/api/whatsapp/templates', isAuthenticated, async (req, res) => {
     try {
