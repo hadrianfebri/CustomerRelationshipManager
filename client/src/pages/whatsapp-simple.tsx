@@ -93,7 +93,8 @@ export default function WhatsAppSimple() {
   const generateLinkMutation = useMutation({
     mutationFn: async (data: any) => {
       console.log('Sending single link request:', data);
-      return await apiRequest("POST", "/api/whatsapp/simple/generate-link", data);
+      const response = await apiRequest("POST", "/api/whatsapp/simple/generate-link", data);
+      return await response.json();
     },
     onSuccess: (response: any) => {
       console.log('Single link response:', response);
@@ -142,7 +143,8 @@ export default function WhatsAppSimple() {
 
   const generateBulkLinksMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("POST", "/api/whatsapp/simple/bulk-links", data);
+      const response = await apiRequest("POST", "/api/whatsapp/simple/bulk-links", data);
+      return await response.json();
     },
     onSuccess: (response: any) => {
       console.log('Bulk links response:', response);
