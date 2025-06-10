@@ -98,7 +98,7 @@ export default function WhatsAppSimple() {
     onSuccess: (response: any) => {
       console.log('Single link response:', response);
       
-      if (response?.waLink) {
+      if (response?.success && response?.waLink) {
         // Show link preview in a temporary card first
         const linkPreview = {
           contactId: response.contactId || 0,
@@ -117,10 +117,10 @@ export default function WhatsAppSimple() {
           description: "Link wa.me telah dibuka di tab baru",
         });
       } else {
-        console.error('No waLink in response:', response);
+        console.error('Invalid response format:', response);
         toast({
           title: "Error",
-          description: "Link WhatsApp tidak dapat dibuat - no waLink returned",
+          description: "Format response tidak valid dari server",
           variant: "destructive",
         });
       }
@@ -141,12 +141,22 @@ export default function WhatsAppSimple() {
     },
     onSuccess: (response: any) => {
       console.log('Bulk links response:', response);
-      const links = response?.links || [];
-      setGeneratedLinks(links);
-      toast({
-        title: "Bulk Links Dibuat",
-        description: `${links.length} link wa.me berhasil dibuat`,
-      });
+      
+      if (response?.success && response?.links) {
+        const links = response.links;
+        setGeneratedLinks(links);
+        toast({
+          title: "Bulk Links Dibuat",
+          description: `${links.length} link wa.me berhasil dibuat`,
+        });
+      } else {
+        console.error('Invalid bulk response format:', response);
+        toast({
+          title: "Error",
+          description: "Format response bulk links tidak valid",
+          variant: "destructive",
+        });
+      }
     },
     onError: (error: any) => {
       console.error('Bulk links error:', error);
