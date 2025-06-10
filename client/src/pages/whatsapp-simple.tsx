@@ -97,8 +97,12 @@ export default function WhatsAppSimple() {
     },
     onSuccess: (response: any) => {
       console.log('Single link response:', response);
+      console.log('Response success:', response?.success);
+      console.log('Response waLink:', response?.waLink);
+      console.log('Response type:', typeof response);
       
-      if (response?.success && response?.waLink) {
+      // Check if response has the expected structure
+      if (response && response.success === true && response.waLink) {
         // Show link preview in a temporary card first
         const linkPreview = {
           contactId: response.contactId || 0,
@@ -118,9 +122,10 @@ export default function WhatsAppSimple() {
         });
       } else {
         console.error('Invalid response format:', response);
+        console.error('Expected: {success: true, waLink: string}');
         toast({
-          title: "Error",
-          description: "Format response tidak valid dari server",
+          title: "Error", 
+          description: `Format response tidak valid: success=${response?.success}, waLink=${!!response?.waLink}`,
           variant: "destructive",
         });
       }
