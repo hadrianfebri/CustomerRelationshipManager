@@ -2399,6 +2399,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true, 
         waLink: result.waLink,
         message: result.message,
+        contactId: contact.id,
+        contactName: `${contact.firstName} ${contact.lastName}`,
+        phone: contact.phone,
         instruction: 'Klik link wa.me untuk buka WhatsApp dan kirim pesan'
       });
     } catch (error) {

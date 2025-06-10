@@ -92,12 +92,23 @@ export default function WhatsAppSimple() {
 
   const generateLinkMutation = useMutation({
     mutationFn: async (data: any) => {
+      console.log('Sending single link request:', data);
       return await apiRequest("POST", "/api/whatsapp/simple/generate-link", data);
     },
     onSuccess: (response: any) => {
       console.log('Single link response:', response);
       
       if (response?.waLink) {
+        // Show link preview in a temporary card first
+        const linkPreview = {
+          contactId: response.contactId || 0,
+          name: response.contactName || 'Customer',
+          phone: response.phone || '',
+          waLink: response.waLink,
+          message: response.message || ''
+        };
+        setGeneratedLinks([linkPreview]);
+        
         // Open WhatsApp link in new tab
         window.open(response.waLink, '_blank');
         
@@ -106,9 +117,10 @@ export default function WhatsAppSimple() {
           description: "Link wa.me telah dibuka di tab baru",
         });
       } else {
+        console.error('No waLink in response:', response);
         toast({
           title: "Error",
-          description: "Link WhatsApp tidak dapat dibuat",
+          description: "Link WhatsApp tidak dapat dibuat - no waLink returned",
           variant: "destructive",
         });
       }
@@ -147,6 +159,8 @@ export default function WhatsAppSimple() {
   });
 
   const handleOrderConfirmation = () => {
+    console.log('Order form data:', orderForm);
+    
     if (!orderForm.contactId || !orderForm.orderId || !orderForm.items || !orderForm.total) {
       toast({
         title: "Data Tidak Lengkap",
@@ -156,7 +170,7 @@ export default function WhatsAppSimple() {
       return;
     }
 
-    generateLinkMutation.mutate({
+    const payload = {
       contactId: parseInt(orderForm.contactId),
       templateId: 'order_confirm_simple',
       variables: {
@@ -167,10 +181,15 @@ export default function WhatsAppSimple() {
         estimatedDelivery: orderForm.estimatedDelivery,
         bankAccount: orderForm.bankAccount
       }
-    });
+    };
+    
+    console.log('Submitting order confirmation:', payload);
+    generateLinkMutation.mutate(payload);
   };
 
   const handlePaymentReminder = () => {
+    console.log('Payment form data:', paymentForm);
+    
     if (!paymentForm.contactId || !paymentForm.orderId || !paymentForm.amount) {
       toast({
         title: "Data Tidak Lengkap",
@@ -180,7 +199,7 @@ export default function WhatsAppSimple() {
       return;
     }
 
-    generateLinkMutation.mutate({
+    const payload = {
       contactId: parseInt(paymentForm.contactId),
       templateId: 'payment_reminder_simple',
       variables: {
@@ -189,10 +208,15 @@ export default function WhatsAppSimple() {
         bankAccount: paymentForm.bankAccount,
         dueDate: paymentForm.dueDate
       }
-    });
+    };
+    
+    console.log('Submitting payment reminder:', payload);
+    generateLinkMutation.mutate(payload);
   };
 
   const handleFollowUp = () => {
+    console.log('Follow-up form data:', followUpForm);
+    
     if (!followUpForm.contactId) {
       toast({
         title: "Data Tidak Lengkap",
@@ -202,13 +226,16 @@ export default function WhatsAppSimple() {
       return;
     }
 
-    generateLinkMutation.mutate({
+    const payload = {
       contactId: parseInt(followUpForm.contactId),
       templateId: 'followup_simple',
       variables: {
         reviewLink: followUpForm.reviewLink
       }
-    });
+    };
+    
+    console.log('Submitting follow-up:', payload);
+    generateLinkMutation.mutate(payload);
   };
 
   const handlePromoBroadcast = () => {
