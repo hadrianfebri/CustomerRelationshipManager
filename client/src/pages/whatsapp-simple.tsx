@@ -239,6 +239,9 @@ export default function WhatsAppSimple() {
   };
 
   const handlePromoBroadcast = () => {
+    console.log('Promo form data:', promoForm);
+    console.log('Selected contacts:', selectedContacts);
+    
     if (selectedContacts.length === 0) {
       toast({
         title: "Pilih Contacts",
@@ -248,14 +251,20 @@ export default function WhatsAppSimple() {
       return;
     }
 
-    generateBulkLinksMutation.mutate({
+    const payload = {
       contactIds: selectedContacts,
       templateId: 'promo_broadcast',
       variables: promoForm
-    });
+    };
+    
+    console.log('Submitting promo broadcast:', payload);
+    generateBulkLinksMutation.mutate(payload);
   };
 
   const handleCustomBroadcast = () => {
+    console.log('Custom broadcast message:', broadcastMessage);
+    console.log('Selected contacts:', selectedContacts);
+    
     if (selectedContacts.length === 0 || !broadcastMessage) {
       toast({
         title: "Data Tidak Lengkap",
@@ -265,10 +274,13 @@ export default function WhatsAppSimple() {
       return;
     }
 
-    generateBulkLinksMutation.mutate({
+    const payload = {
       contactIds: selectedContacts,
       message: broadcastMessage
-    });
+    };
+    
+    console.log('Submitting custom broadcast:', payload);
+    generateBulkLinksMutation.mutate(payload);
   };
 
   const toggleContactSelection = (contactId: number) => {
